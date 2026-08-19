@@ -1,0 +1,9 @@
+# Netlify build config for GitHub-based deploys.
+#
+# The site is a no-build static folder, but the repo also contains the studio/
+# Sanity CMS project which must NOT be served. This build step copies only the
+# site files into dist/ (never studio/) and wires up the serverless review function.
+[build]
+  command = "bash netlify-build.sh"
+  publish = "dist"
+  functions = "netlify/functions"

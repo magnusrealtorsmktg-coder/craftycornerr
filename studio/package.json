@@ -1,0 +1,24 @@
+{
+  "name": "the-crafty-cornerr-studio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sanity Studio (content editor) for The Crafty Cornerr storefront",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "extract-seed": "node scripts/extract-seed.mjs",
+    "import": "node scripts/import.mjs"
+  },
+  "dependencies": {
+    "@sanity/vision": "^3.57.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sanity": "^3.57.0",
+    "styled-components": "^6.1.15"
+  },
+  "devDependencies": {
+    "@sanity/client": "^6.21.3"
+  }
+}

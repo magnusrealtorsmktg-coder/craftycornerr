@@ -1,0 +1,25 @@
+# ── Secrets & local machine config (NEVER commit) ─────────────
+.claude/                 # contains a Sanity Editor token in settings.local.json
+.env
+.env.local
+.env.*.local
+studio/.env
+
+# ── Dependencies ──────────────────────────────────────────────
+node_modules/
+studio/node_modules/
+
+# ── Netlify local state & build output ────────────────────────
+.netlify
+dist/
+
+# ── Sanity Studio build output ────────────────────────────────
+studio/dist/
+
+# ── One-time import artifact (3 MB base64 dump; data already lives in Sanity) ──
+studio/seed/
+
+# ── OS / editor junk ──────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+Thumbs.db

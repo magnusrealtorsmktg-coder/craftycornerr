@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Crafty Corner — Handmade décor for happy homes</title>
+<meta name="description" content="Trendy handmade décor — wooden rangoli, pearl & stone rangoli, bandhanwar toran and decorative flowers. Made by hand, made to be seen." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Apply the festive theme BEFORE first paint (no flash of the default site).
+     Uses ?theme= if present, else the last theme Sanity gave us. Sanity is still the
+     source of truth: applyTheme() re-applies + re-caches once the CMS data lands. -->
+<script>
+(function(){try{
+  var u=new URLSearchParams(location.search).get('theme');
+  var t=u||localStorage.getItem('tcc.theme');
+  if(t&&t!=='default')document.documentElement.setAttribute('data-theme',t);
+}catch(e){}})();
+</script>
+<!-- Devanagari (for the ॐ glyph the Ganpati cinematic samples, and the caption) -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@600;700&display=swap" rel="stylesheet">
+<!-- Three.js for the Ganpati particle cinematic (loaded lazily, only in the Ganpati theme) -->
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lenis/1.1.14/lenis.min.js"></script>
+<style>
+:root{
+  --cream:#FAF7F2; --peach:#FFD8C2; --coral:#FF8A80; --sage:#A8C3A0; --lav:#C7B8EA;
+  --charcoal:#222222; --ink:#2c2622; --beige-deep:#ece2d5;
+  --display:'Bricolage Grotesque', system-ui, sans-serif;
+  --sans:'Plus Jakarta Sans', system-ui, sans-serif;
+  --hand:'Caveat', cursive;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+/* ===== Diwali cinematic overlay (canvas) =====
+   Fixed, transparent, non-interactive layer. Plays ONCE on scroll past the hero
+   when the Diwali theme is on. It changes no colours, layout, or existing sections. */
+#dwFx{position:fixed;inset:0;width:100%;height:100%;z-index:45;pointer-events:none;opacity:1;transition:opacity 1s ease;display:none}
+#dwFx.on{display:block}
+#dwFx.out{opacity:0}
+
+/* ===== Ganpati cinematic section (full-viewport, sits right after the hero) ===== */
+.gn-scene{display:none}
+:root[data-theme="ganpati"] .gn-scene{display:block;position:relative;width:100%;height:100vh;min-height:560px;overflow:hidden;
+  background:#f7ecd8 url('ganpati-scene-bg.jpg?v=3') center/cover no-repeat}
+.gn-scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.gn-scene .gn-cap{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-family:'Noto Serif Devanagari',serif;font-weight:700;font-size:clamp(1rem,3vw,1.6rem);
+  color:#8a2214;letter-spacing:.02em;opacity:0;transition:opacity 1.2s ease;pointer-events:none;text-shadow:0 1px 2px rgba(255,247,238,.95),0 0 16px rgba(255,240,210,.75)}
+.gn-scene.show-cap .gn-cap{opacity:.92}
+
+/* ===== Cloud wipe between the hero and the mandap (Ganpati theme only).
+   A tall bank of soft white clouds is swept up over the viewport by a scrubbed
+   ScrollTrigger while #gnScene scrolls in, hiding the hard background change.
+   Puffs are built in JS; the veil guarantees full coverage mid-wipe. ===== */
+#cloudWipe{display:none}
+:root[data-theme="ganpati"] #cloudWipe{display:block;position:fixed;inset:0;z-index:150;pointer-events:none;overflow:hidden}
+#cloudWipe .cw-bank{position:absolute;top:100%;left:-12%;right:-12%;height:260vh;will-change:transform}
+#cloudWipe .cw-veil{position:absolute;left:0;right:0;top:55vh;height:150vh;
+  background:linear-gradient(to bottom,rgba(255,253,248,0),#fffdf8 14%,#fffdf8 86%,rgba(255,253,248,0))}
+#cloudWipe .cw-puff{position:absolute;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 45%,rgba(255,253,248,.98) 0 36%,rgba(255,253,248,0) 70%)}
+
+/* =====================================================================
+   PREMIUM DIWALI EDITION — festive skin, scoped to [data-theme="diwali"].
+   Decoration only: colours, gold accents, glow, subtle motifs. No layout,
+   composition, or typography changes. Airy & elegant — never dark.
+   ===================================================================== */
+:root[data-theme="diwali"]{
+  --cream:#FFF8F0; --peach:#F6E8D4; --coral:#7A2330; --sage:#4B7B4C;
+  --lav:#F0E4CF; --charcoal:#2E211C; --ink:#3a2a20; --beige-deep:#efe3cf;
+  --gold:#C89B3C; --gold-hi:#e9cd82; --gold-lo:#a97f2c; --saffron:#D88A2D; --maroon:#7A2330;
+}
+/* ===== GANPATI theme — starter (vermilion, saffron & durva green on warm ivory). Airy & elegant. ===== */
+:root[data-theme="ganpati"]{
+  --cream:#FFF7EE; --peach:#FBE3C6; --coral:#B5322A; --sage:#2E7D32;
+  --lav:#F3E2C8; --charcoal:#2A1C14; --ink:#3a2618; --beige-deep:#efe0cb;
+  --gold:#C89B3C; --gold-hi:#e6c874; --gold-lo:#a97f2c; --saffron:#E8791E; --maroon:#B5322A;
+}
+[data-theme="ganpati"] body{background:
+  radial-gradient(760px 520px at 8% -6%, rgba(232,121,30,.07), transparent 62%),
+  radial-gradient(680px 520px at 98% 6%, rgba(200,155,60,.07), transparent 60%),
+  radial-gradient(900px 700px at 50% 118%, rgba(181,50,42,.05), transparent 62%),
+  var(--cream);}
+/* primary CTA: saffron -> vermilion gradient + shine */
+[data-theme="ganpati"] .btn.coral{background:linear-gradient(135deg,#f0a032,#E8791E 45%,#c23a22)!important;color:#fff!important;box-shadow:0 10px 24px -12px rgba(232,121,30,.7),inset 0 1px 0 rgba(255,255,255,.32)!important;position:relative;overflow:hidden}
+[data-theme="ganpati"] .btn.coral:hover{background:linear-gradient(135deg,#f6b04a,#f08a2c 45%,#d4462a)!important;color:#fff!important}
+[data-theme="ganpati"] .btn.coral::after{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;transform:skewX(-18deg);pointer-events:none;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transition:left .65s var(--ease)}
+[data-theme="ganpati"] .btn.coral:hover::after{left:130%}
+[data-theme="ganpati"] .btn.ghost{background:rgba(255,247,238,.55)!important;color:var(--maroon)!important;box-shadow:inset 0 0 0 1.6px var(--saffron)!important}
+/* hero highlight + squiggle + handwritten labels */
+[data-theme="ganpati"] .h-2 .big em,[data-theme="ganpati"] .mhero-title .accent{background:linear-gradient(92deg,#c23a22,#E8791E 45%,#f0a83a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+[data-theme="ganpati"] .squiggle path,[data-theme="ganpati"] .mhero-squiggle path{stroke:#E8791E;filter:drop-shadow(0 1px 2px rgba(232,121,30,.45))}
+[data-theme="ganpati"] .kick,[data-theme="ganpati"] .h-tag,[data-theme="ganpati"] .mhero-label{color:var(--maroon)}
+[data-theme="ganpati"] .h-sub,[data-theme="ganpati"] .mhero-desc{color:#33231a;text-shadow:0 1px 2px rgba(255,247,238,.85)}
+/* NAV: warm marigold / saffron festive header (desktop + mobile) */
+[data-theme="ganpati"] .nav{background:linear-gradient(135deg,#f9d089 0%,#f2ae55 46%,#ec9440 100%)!important;
+  -webkit-backdrop-filter:blur(10px) saturate(1.08);backdrop-filter:blur(10px) saturate(1.08);
+  border:1px solid rgba(190,110,45,.4)!important;
+  box-shadow:0 14px 32px -16px rgba(170,80,30,.5),inset 0 1px 0 rgba(255,255,255,.5)!important}
+[data-theme="ganpati"] .logo-txt small{color:#7d4a22}
+[data-theme="ganpati"] .logo-badge{box-shadow:0 0 0 2px rgba(255,255,255,.7),0 6px 16px -8px rgba(150,70,20,.55)}
+[data-theme="ganpati"] .nav-ic{background:rgba(255,255,255,.4);box-shadow:inset 0 0 0 1.5px rgba(120,55,20,.45)!important;color:#7a3312!important}
+[data-theme="ganpati"] .burger span{background:#4a2a12}
+
+/* Ganpati hero artwork — full-bleed. The Ganesha motif is drawn small/low enough in the artwork
+   itself that it clears the floating nav, so no offset or zoom-out hack is needed. */
+[data-theme="ganpati"] .hero{background:#fdf0dd url('ganpati-hero-bg.jpg?v=2') center/cover no-repeat}
+[data-theme="ganpati"] .blob,[data-theme="ganpati"] .cmandala{display:none}
+/* mobile hero: portrait Ganpati artwork, doorway photo + cream fills removed, scrim keeps text readable */
+[data-theme="ganpati"] .mhero-bgwrap,[data-theme="ganpati"] .mhero-fade{display:none}
+[data-theme="ganpati"] .mhero{background:url('ganpati-hero-mobile.jpg?v=2') center/cover no-repeat}
+[data-theme="ganpati"] .mhero-top{background:transparent;height:32vh;min-height:220px}
+[data-theme="ganpati"] .mhero-content{background:linear-gradient(to top,rgba(255,247,238,.92) 0%,rgba(255,247,238,.38) 55%,rgba(255,247,238,0) 100%)}
+
+/* ---- mobile hero CTAs: these use .mhero-btn/.mhero-watch (NOT .btn.coral), so they need
+        their own festive treatment — otherwise they stay the built-in salmon. ---- */
+[data-theme="ganpati"] .mhero-btn{background:linear-gradient(135deg,#f0a032,#E8791E 45%,#c23a22)!important;color:#fff!important;
+  box-shadow:0 16px 30px -12px rgba(232,121,30,.7)!important}
+[data-theme="ganpati"] .mhero-watch{color:#4a2a12!important}
+[data-theme="ganpati"] .mhero-watch .play{background:rgba(232,121,30,.18)!important;color:#c23a22!important}
+[data-theme="ganpati"] .mhero-badges span{color:#5a4433}
+[data-theme="ganpati"] .mhero-badges i{color:#c23a22}
+
+[data-theme="diwali"] .mhero-btn{background:linear-gradient(135deg,#e9cd82,#C89B3C 46%,#a97f2c)!important;color:#3c2410!important;
+  box-shadow:0 16px 30px -12px rgba(200,155,60,.7)!important}
+[data-theme="diwali"] .mhero-watch{color:#3a2618!important}
+[data-theme="diwali"] .mhero-watch .play{background:rgba(200,155,60,.2)!important;color:#a97f2c!important}
+[data-theme="diwali"] .mhero-badges span{color:#5a4433}
+[data-theme="diwali"] .mhero-badges i{color:var(--maroon)}
+/* faint warm halos (kept very light so the page stays airy) */
+[data-theme="diwali"] body{background:
+  radial-gradient(760px 520px at 8% -6%, rgba(216,138,45,.07), transparent 62%),
+  radial-gradient(680px 520px at 98% 6%, rgba(200,155,60,.08), transparent 60%),
+  radial-gradient(900px 700px at 50% 118%, rgba(122,35,48,.05), transparent 62%),
+  var(--cream);}
+/* tiny floating sparkles — subtle, fixed, non-interactive */
+:root[data-theme="diwali"]::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:
+   radial-gradient(1.6px 1.6px at 18% 28%, rgba(233,205,130,.9), transparent 60%),
+   radial-gradient(1.4px 1.4px at 72% 18%, rgba(216,138,45,.8), transparent 60%),
+   radial-gradient(1.5px 1.5px at 41% 62%, rgba(233,205,130,.75), transparent 60%),
+   radial-gradient(1.3px 1.3px at 86% 54%, rgba(200,155,60,.8), transparent 60%),
+   radial-gradient(1.5px 1.5px at 60% 82%, rgba(233,205,130,.7), transparent 60%),
+   radial-gradient(1.3px 1.3px at 28% 88%, rgba(216,138,45,.7), transparent 60%);
+  animation:dwTwinkle 5.5s ease-in-out infinite}
+@keyframes dwTwinkle{0%,100%{opacity:.26}50%{opacity:.5}}
+
+/* HERO background: pastel blobs -> soft golden glows / halos */
+[data-theme="diwali"] .blob{filter:blur(36px)!important;opacity:.5!important;
+  background:radial-gradient(circle at 42% 40%, rgba(216,138,45,.42), rgba(200,155,60,.12) 55%, transparent 74%)!important}
+[data-theme="diwali"] .blob:nth-of-type(2){background:radial-gradient(circle at 50% 45%, rgba(75,123,76,.22), transparent 70%)!important;opacity:.42!important}
+[data-theme="diwali"] .blob:nth-of-type(3){background:radial-gradient(circle at 50% 45%, rgba(233,205,130,.5), transparent 72%)!important}
+/* hide the decorative spinning mandalas in the Diwali theme (maroon-on-ivory reads too strongly) */
+[data-theme="diwali"] .cmandala{display:none}
+/* Premium Diwali hero background image (replaces the leaf shadows + the pastel blobs).
+   Save the artwork as  diwali-hero-bg.jpg  in the project folder. */
+[data-theme="diwali"] .hero{background:url('diwali-hero-bg.jpg') center/cover no-repeat}
+[data-theme="diwali"] .blob{display:none}
+/* Mobile hero: full portrait Diwali background with the taglines overlaid */
+[data-theme="diwali"] .mhero-bgwrap,[data-theme="diwali"] .mhero-fade{display:none}
+[data-theme="diwali"] .mhero{background:url('diwali-hero-mobile.jpg') center/cover no-repeat}
+[data-theme="diwali"] .mhero-top{background:transparent;height:32vh;min-height:220px}
+[data-theme="diwali"] .mhero-content{background:linear-gradient(to top,rgba(255,248,240,.9) 0%,rgba(255,248,240,.35) 55%,rgba(255,248,240,0) 100%)}
+[data-theme="diwali"] .mhero-label{color:var(--maroon)}   /* match the desktop "made by hand" colour */
+[data-theme="diwali"] .mhero-desc{color:#33231a;text-shadow:0 1px 2px rgba(255,248,240,.8)}   /* readable over the festive bg */
+.mh-feature{display:none}   /* stopgap product card no longer needed with the full background */
+/* typewriter caret for the hero "made by hand" kick (class toggled by JS in the Diwali theme) */
+.kick.typing,.mhero-label.typing{border-right:2px solid currentColor;margin-right:-2px;animation:kickCaret .75s steps(1) infinite}
+@keyframes kickCaret{50%{border-color:transparent}}
+
+/* NAV: festive frosted-glass luxury header */
+[data-theme="diwali"] .nav{background:rgba(255,248,240,.72)!important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.15);backdrop-filter:blur(14px) saturate(1.15);
+  border:1px solid rgba(200,155,60,.42)!important;
+  box-shadow:0 12px 30px -16px rgba(122,35,48,.32),inset 0 1px 0 rgba(233,205,130,.5)!important}
+[data-theme="diwali"] .logo-badge{box-shadow:0 0 0 2px rgba(200,155,60,.55),0 6px 16px -8px rgba(200,155,60,.55)}
+[data-theme="diwali"] .logo::after{content:'✦';margin-left:.2rem;color:var(--gold);font-size:.7rem;align-self:flex-start;text-shadow:0 0 6px rgba(233,205,130,.85)}
+[data-theme="diwali"] .nav-ic{box-shadow:inset 0 0 0 1.4px rgba(200,155,60,.5)!important;color:var(--maroon)!important}
+
+/* BUTTONS: primary gold gradient + shine sweep; secondary ivory + gold */
+[data-theme="diwali"] .btn.coral{background:linear-gradient(135deg,#e9cd82,#C89B3C 46%,#a97f2c)!important;color:#3c2410!important;
+  box-shadow:0 10px 24px -12px rgba(200,155,60,.75),inset 0 1px 0 rgba(255,255,255,.45)!important;position:relative;overflow:hidden}
+[data-theme="diwali"] .btn.coral:hover{background:linear-gradient(135deg,#f2db95,#d3a942 46%,#b98d34)!important;color:#3c2410!important;box-shadow:0 14px 30px -12px rgba(216,138,45,.85),inset 0 1px 0 rgba(255,255,255,.5)!important}
+[data-theme="diwali"] .btn.coral::after{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;transform:skewX(-18deg);pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);transition:left .65s var(--ease)}
+[data-theme="diwali"] .btn.coral:hover::after{left:130%}
+[data-theme="diwali"] .btn.ghost{background:rgba(255,248,240,.55)!important;color:var(--maroon)!important;box-shadow:inset 0 0 0 1.6px var(--gold)!important}
+[data-theme="diwali"] .btn.ghost:hover{background:rgba(200,155,60,.12)!important;color:var(--maroon)!important;box-shadow:inset 0 0 0 1.6px var(--gold),0 8px 20px -10px rgba(200,155,60,.6)!important}
+
+/* HERO text: gold-gradient highlight + gold brush underline (typography unchanged) */
+[data-theme="diwali"] .h-2 .big em,[data-theme="diwali"] .mhero-title .accent{
+  background:linear-gradient(92deg,#a97f2c,#e9cd82 45%,#D88A2D);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+[data-theme="diwali"] .squiggle path,[data-theme="diwali"] .mhero-squiggle path{stroke:#C89B3C;filter:drop-shadow(0 1px 2px rgba(200,155,60,.45))}
+[data-theme="diwali"] .kick,[data-theme="diwali"] .h-tag{color:var(--maroon)}
+[data-theme="diwali"] .h-sub{color:#33231a;text-shadow:0 1px 2px rgba(255,248,240,.85)}   /* readable over the festive bg (matches mobile) */
+
+/* PRODUCT CARDS: gold hairline + warm ambient shadow + festive glow + hover sparkle */
+[data-theme="diwali"] .pincard{background:linear-gradient(#fffdf8,#fbf3e6)!important;
+  box-shadow:0 30px 50px -24px rgba(122,35,48,.42),0 0 0 1px rgba(200,155,60,.35)!important}
+[data-theme="diwali"] .pincard:hover{box-shadow:0 34px 56px -22px rgba(122,35,48,.5),0 0 0 1px rgba(200,155,60,.6),0 0 22px rgba(216,138,45,.28)!important}
+[data-theme="diwali"] .pincard::before{content:'✦';position:absolute;top:-9px;right:-3px;z-index:6;color:var(--gold-hi);font-size:.95rem;opacity:0;transform:scale(.4) rotate(-25deg);transition:.35s var(--ease);text-shadow:0 0 10px rgba(233,205,130,.9);pointer-events:none}
+[data-theme="diwali"] .pincard:hover::before{opacity:1;transform:scale(1) rotate(0)}
+[data-theme="diwali"] .cinner{box-shadow:0 42px 72px -28px rgba(122,35,48,.4),0 0 0 1px rgba(200,155,60,.32)!important}
+[data-theme="diwali"] .tpinner{box-shadow:inset 0 0 0 1px rgba(200,155,60,.4)}
+[data-theme="diwali"] .occcard{box-shadow:0 0 0 1px rgba(200,155,60,.3)}
+
+/* BADGES / hearts — warmer festive */
+[data-theme="diwali"] .badge{background:linear-gradient(135deg,#C89B3C,#D88A2D)!important;color:#3c2410!important;box-shadow:0 4px 10px -4px rgba(200,155,60,.6)}
+[data-theme="diwali"] .like,[data-theme="diwali"] .heart,[data-theme="diwali"] .wish{color:var(--maroon)}
+
+/* SECTION DIVIDERS: delicate gold ornament in the whitespace above each section */
+[data-theme="diwali"] .sec-pad{position:relative}
+[data-theme="diwali"] .sec-pad::before{content:'✦ ❋ ✦';position:absolute;top:clamp(26px,5vw,54px);left:50%;transform:translateX(-50%);color:var(--gold);font-size:.9rem;letter-spacing:.5rem;opacity:.65;text-shadow:0 0 10px rgba(233,205,130,.5);pointer-events:none}
+
+/* FOOTER: warm golden gradient, string lights, diya glow, sparkle (kept light & sophisticated) */
+[data-theme="diwali"] footer{background:linear-gradient(180deg,#fbefda 0%,#f3e2c4 55%,#efd9b6 100%)!important;color:#4a2e20!important;position:relative;overflow:hidden}
+[data-theme="diwali"] footer *{color:#4a2e20!important}
+[data-theme="diwali"] footer h4,[data-theme="diwali"] footer .foot-logo,[data-theme="diwali"] footer b,[data-theme="diwali"] footer strong{color:var(--maroon)!important}
+[data-theme="diwali"] footer a:hover{color:var(--gold-lo)!important}
+[data-theme="diwali"] footer::before{content:'';position:absolute;top:0;left:0;right:0;height:20px;pointer-events:none;opacity:.9;
+  background:radial-gradient(circle at 15px 12px,#e9cd82 0,#e9cd82 2.4px,transparent 3.4px) 0 0/34px 20px repeat-x;
+  filter:drop-shadow(0 0 4px rgba(233,205,130,.85))}
+[data-theme="diwali"] footer::after{content:'';position:absolute;left:0;right:0;bottom:0;height:130px;pointer-events:none;
+  background:radial-gradient(130px 64px at 12% 100%, rgba(216,138,45,.32), transparent 70%),
+             radial-gradient(130px 64px at 88% 100%, rgba(200,155,60,.30), transparent 70%)}
+
+[data-theme="diwali"] .foot-news{border-bottom-color:rgba(200,155,60,.3)!important}
+[data-theme="diwali"] .foot-form input{background:rgba(255,255,255,.75)!important;border:1px solid rgba(200,155,60,.5)!important;color:#4a2e20!important}
+[data-theme="diwali"] .foot-form input::placeholder{color:rgba(74,46,32,.5)!important}
+
+@media(prefers-reduced-motion:reduce){:root[data-theme="diwali"]::before{animation:none}[data-theme="diwali"] .btn.coral::after{transition:none}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--cream);color:var(--charcoal);font-weight:400;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+svg{display:block}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--coral);color:#fff}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(20px,5vw,56px)}
+.disp{font-family:var(--display)}
+.hand{font-family:var(--hand)}
+
+/* tags / chips */
+.chip{display:inline-flex;align-items:center;gap:.5rem;font-size:.74rem;font-weight:600;letter-spacing:.02em;padding:.45rem .95rem;border-radius:40px;background:#fff;border:1.5px solid var(--charcoal)}
+.eye{font-family:var(--hand);font-size:1.5rem;color:var(--coral);transform:rotate(-3deg);display:inline-block}
+
+/* buttons */
+.btn{font-family:var(--sans);font-weight:600;font-size:.92rem;padding:1rem 1.8rem;border-radius:50px;border:none;cursor:pointer;background:var(--charcoal);color:#fff;display:inline-flex;align-items:center;gap:.6rem;will-change:transform;transition:background .3s}
+.btn:hover{background:var(--coral)}
+.btn.ghost{background:transparent;color:var(--charcoal);box-shadow:inset 0 0 0 1.5px var(--charcoal)}
+.btn.ghost:hover{background:var(--charcoal);color:#fff}
+.btn.coral{background:var(--coral)}.btn.coral:hover{background:var(--charcoal)}
+
+/* frosted strip behind/above the floating nav — blurs content scrolling up through the top gap.
+   Soft mask fades the blur out toward the bottom so there's no hard edge. */
+.topblur{position:fixed;top:0;left:0;right:0;height:98px;z-index:190;pointer-events:none;
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  -webkit-mask:linear-gradient(to bottom,#000 56%,rgba(0,0,0,0));mask:linear-gradient(to bottom,#000 56%,rgba(0,0,0,0))}
+@media(max-width:820px){.topblur{height:82px}}
+
+/* nav */
+.nav{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:200;width:min(1180px,93vw);
+  display:flex;align-items:center;justify-content:space-between;padding:.5rem 1.4rem .5rem .55rem;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.9);border-radius:60px;box-shadow:0 18px 44px -22px rgba(34,34,34,.4)}
+.nav .logo{display:flex;align-items:center;gap:.7rem;min-width:0}
+.logo-txt b{white-space:nowrap}
+.logo-badge{width:clamp(46px,5vw,56px);height:clamp(46px,5vw,56px);flex:0 0 auto;border-radius:50%;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -6px rgba(34,34,34,.45),0 0 0 2px var(--peach),0 0 0 3.5px rgba(255,138,128,.5)}
+.nav-icon{width:108%;height:108%;object-fit:cover}
+.logo-txt{display:flex;flex-direction:column;line-height:1.02}
+.logo-txt b{font-family:var(--display);font-weight:800;font-size:clamp(1.02rem,2.2vw,1.32rem);letter-spacing:-.01em}
+.logo-txt b .cr{color:var(--coral)}
+.logo-txt small{font-family:var(--hand);font-size:.95rem;color:#9a8f82;margin-top:0}
+.brandlogo{display:block}
+.nav-brand{height:clamp(48px,6.4vw,62px);width:auto;display:block;margin-left:.5rem;object-fit:contain}
+.foot-logo{width:clamp(190px,26vw,240px);margin:0 auto 1.3rem;border-radius:18px;background:#fff;padding:14px;box-shadow:0 16px 30px -16px rgba(34,34,34,.3)}
+.nav .links{display:flex;gap:1.8rem;align-items:center}
+.nav .links a{font-size:.9rem;font-weight:500;position:relative}
+.nav .links a::after{content:"";position:absolute;left:0;bottom:-4px;width:0;height:2px;background:var(--coral);border-radius:2px;transition:width .35s var(--ease)}
+.nav .links a:hover::after{width:100%}
+.burger{display:none;background:none;border:0;flex-direction:column;gap:5px;cursor:pointer;padding:10px}
+.burger span{width:24px;height:2px;background:var(--charcoal);border-radius:2px}
+.mobile{position:fixed;inset:0;z-index:199;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:1.4rem;
+  overflow-y:auto;overscroll-behavior:contain;padding:96px 20px calc(env(safe-area-inset-bottom,0px) + 40px);
+  transform:translateY(-100%);transition:transform .6s var(--ease)}
+.mobile::-webkit-scrollbar{display:none}
+.mobile.open{transform:translateY(0)}
+.mobile a{font-family:var(--display);font-size:2.2rem;font-weight:700}
+
+/* ============ HERO COLLAGE ============ */
+.hero{position:relative;min-height:100vh;padding-top:120px;overflow:hidden}
+.mhero{display:none}  /* editorial mobile hero — shown only on mobile (see responsive block) */
+.top-blur{display:none}  /* frosted strip in the gap above the floating nav (mobile) */
+@keyframes kenburns{from{transform:scale(1.1)}to{transform:scale(1)}}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes floaty{0%{transform:translate(0,0) rotate(0deg)}33%{transform:translate(6px,-12px) rotate(8deg)}66%{transform:translate(-5px,-6px) rotate(-6deg)}100%{transform:translate(0,0) rotate(0deg)}}
+.stage{position:relative;height:calc(100vh - 120px);min-height:560px}
+.blob{position:absolute;border-radius:50%;filter:blur(8px);opacity:.85;will-change:transform;z-index:0}
+.htext{position:absolute;z-index:5;will-change:transform}
+.h-1{left:4%;top:12%}
+.h-1 .big{font-family:var(--display);font-weight:800;font-size:clamp(3.4rem,9vw,8rem);line-height:.92;letter-spacing:-.03em}
+.h-2{left:5%;top:calc(12% + clamp(3.4rem,9vw,8rem))}
+.h-2 .big{font-family:var(--display);font-weight:800;font-size:clamp(3rem,8vw,7rem);line-height:.92;letter-spacing:-.03em}
+.h-2 .big em{font-style:normal;color:var(--coral)}
+.squiggle{position:absolute;left:5%;top:calc(12% + clamp(3.4rem,9vw,8rem) + clamp(3rem,8vw,7rem) - 6px);width:min(38vw,360px);z-index:4}
+.h-sub{position:absolute;left:5.5%;bottom:calc(8% + 5rem);max-width:360px;z-index:5;font-size:1.02rem;color:#564e47}
+.h-cta{position:absolute;left:5.5%;bottom:8%;z-index:6;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap}
+.h-tag{position:absolute;font-family:var(--hand);font-size:1.6rem;color:var(--charcoal);z-index:6}
+
+/* pinned cards */
+.pincard{position:absolute;z-index:3;width:min(20vw,210px);border-radius:20px;background:#fff;padding:12px 12px 14px;box-shadow:0 30px 50px -26px rgba(34,34,34,.45);will-change:transform;transition:box-shadow .45s var(--ease)}
+.pincard:hover{box-shadow:0 40px 64px -24px rgba(34,34,34,.5)}
+.pincard .ph{position:relative;border-radius:14px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pincard .ph svg{width:80%;height:80%}
+.pincard .ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s var(--ease)}
+.pincard:hover .ph img{transform:scale(1.07)}
+.pincard .ph::after{content:"";position:absolute;inset:0;border-radius:14px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.45);pointer-events:none}
+.pincard .price{position:absolute;left:8px;bottom:8px;z-index:2;font-family:var(--sans);font-weight:700;font-size:.72rem;color:var(--charcoal);background:rgba(255,255,255,.92);padding:.28rem .6rem;border-radius:30px;box-shadow:0 6px 14px -8px rgba(34,34,34,.5)}
+.pincard .cap{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:0 2px}
+.pincard .cap b{font-family:var(--display);font-weight:600;font-size:.92rem}
+.pincard .cap .like{width:26px;height:26px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--coral);cursor:pointer;transition:background .25s,transform .25s}
+.pincard .cap .like:hover{background:var(--coral);color:#fff;transform:scale(1.12)}
+.tape{position:absolute;top:-12px;left:50%;transform:translateX(-50%) rotate(-4deg);width:74px;height:24px;background:rgba(199,184,234,.55);border:1px dashed rgba(255,255,255,.7);backdrop-filter:blur(2px);border-radius:3px}
+.pin{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;background:var(--coral);box-shadow:0 4px 8px rgba(0,0,0,.25),inset 0 -3px 4px rgba(0,0,0,.2)}
+
+.scrolldown{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:7;font-family:var(--hand);font-size:1.2rem;color:#8a8076;display:flex;flex-direction:column;align-items:center;gap:.4rem}
+
+/* ============ SECTION shells ============ */
+section{position:relative}
+.sec-pad{padding:clamp(80px,11vw,140px) 0}
+.kick{display:inline-flex;align-items:center;gap:.6rem;font-family:var(--hand);font-size:1.7rem;color:var(--coral);transform:rotate(-2deg)}
+.h2{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,5.5vw,4.2rem);line-height:1.0;letter-spacing:-.025em;margin:.6rem 0 1rem}
+.h2 em{font-style:normal;color:var(--coral)}
+.lead{max-width:48ch;color:#5d554d;font-size:1.05rem}
+
+/* ============ COLLECTIONS ============ */
+.collsec{position:relative;overflow:hidden}
+.coll-bg{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.coll-bg .cblob{position:absolute;border-radius:50%;filter:blur(64px);opacity:.5;mix-blend-mode:multiply;will-change:transform}
+.cblob.cb1{width:440px;height:440px;background:var(--peach);top:-90px;left:-70px;animation:cfloat 16s ease-in-out infinite}
+.cblob.cb2{width:380px;height:380px;background:var(--lav);top:26%;right:-90px;animation:cfloat 21s ease-in-out infinite reverse}
+.cblob.cb3{width:320px;height:320px;background:var(--sage);bottom:-70px;left:18%;animation:cfloat 18s ease-in-out infinite}
+.cblob.cb4{width:280px;height:280px;background:var(--coral);bottom:8%;right:16%;opacity:.3;animation:cfloat 24s ease-in-out infinite reverse}
+@keyframes cfloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(34px,-28px) scale(1.14)}}
+.cmandala{position:absolute;color:var(--coral);opacity:.1;width:360px;height:360px}
+.cmandala.cm1{top:-80px;right:5%;animation:cspin 60s linear infinite}
+.cmandala.cm2{bottom:-110px;left:-50px;width:320px;height:320px;color:var(--sage);opacity:.13;animation:cspin 84s linear infinite reverse}
+@keyframes cspin{to{transform:rotate(360deg)}}
+.collsec .wrap{position:relative;z-index:1}
+
+.collgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:1.3rem;margin-top:3.2rem}
+.collcard{position:relative;min-height:400px;cursor:pointer;perspective:1000px}
+.collcard .cinner{position:absolute;inset:0;border-radius:24px;overflow:hidden;background:var(--beige-deep);transform-style:preserve-3d;transition:transform .5s var(--ease),box-shadow .5s var(--ease);box-shadow:0 18px 40px -30px rgba(34,34,34,.55)}
+.collcard:hover .cinner{transform:translateY(-8px);box-shadow:0 42px 72px -28px var(--glow,rgba(34,34,34,.45)),0 14px 32px -22px rgba(34,34,34,.34)}
+.collcard .cimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.collcard:hover .cimg{transform:scale(1.1)}
+.collcard .veil{position:absolute;inset:0;background:linear-gradient(to top,rgba(28,24,20,.9),rgba(28,24,20,.16) 54%,transparent)}
+.collcard .ring{position:absolute;inset:0;border-radius:24px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.2);pointer-events:none;z-index:3}
+.collcard .save{position:absolute;top:14px;right:14px;background:#fff;border-radius:40px;font-size:.72rem;font-weight:700;padding:.4rem .8rem;opacity:0;transform:translateY(-6px);transition:.4s var(--ease);z-index:4}
+.collcard:hover .save{opacity:1;transform:translateY(0)}
+.collcard .cmeta{position:absolute;left:0;right:0;bottom:0;padding:1.4rem;z-index:3;transform:translateZ(28px)}
+.collcard .t{font-family:var(--display);font-weight:700;font-size:1.3rem;line-height:1.08;color:#fff}
+.collcard .h{font-family:var(--hand);font-size:1.25rem;color:#fff;opacity:.92}
+@media(min-width:1025px){.collgrid{grid-template-columns:repeat(3,1fr);gap:1.7rem;align-items:stretch}.collcard{min-height:500px}}
+
+/* ============ TRENDING BOARD (masonry collage) ============ */
+.pinwall{display:grid;grid-template-columns:repeat(4,1fr);gap:1.3rem;margin-top:3.2rem}
+.tpin{aspect-ratio:4/5}
+.tpinner{position:relative;width:100%;height:100%;border-radius:22px;overflow:hidden;cursor:pointer;background:var(--beige-deep);box-shadow:0 20px 44px -30px rgba(34,34,34,.5);transition:transform .55s var(--ease),box-shadow .55s var(--ease)}
+.tpinner:hover{transform:translateY(-10px) scale(1.015);box-shadow:0 44px 74px -30px var(--glow,rgba(34,34,34,.5))}
+.tpinner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.tpinner:hover img{transform:scale(1.09)}
+.tpin .handle{position:absolute;left:12px;top:12px;background:rgba(255,255,255,.9);backdrop-filter:blur(4px);border-radius:40px;font-size:.74rem;font-weight:700;padding:.36rem .74rem;z-index:4}
+.tpin .heart{position:absolute;top:11px;right:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;font-size:.95rem;color:var(--coral);z-index:4;opacity:0;transform:translateY(-6px);transition:.35s var(--ease)}
+.tpinner:hover .heart{opacity:1;transform:translateY(0)}
+.tpin .q{position:absolute;left:0;right:0;bottom:0;padding:2.8rem 1.1rem 1.1rem;background:linear-gradient(to top,rgba(20,16,14,.9),rgba(20,16,14,.25) 58%,transparent);color:#fff;font-family:var(--display);font-weight:700;font-size:1.02rem;line-height:1.28;z-index:2;transition:opacity .35s var(--ease)}
+.tpin .view{position:absolute;left:0;right:0;bottom:0;padding:2.6rem 1.1rem 1.15rem;background:linear-gradient(to top,rgba(20,16,14,.86),transparent);color:#fff;font-weight:700;font-size:.92rem;opacity:0;transform:translateY(8px);transition:.4s var(--ease);z-index:3}
+.tpinner:hover .view{opacity:1;transform:translateY(0)}
+.tpinner:hover .q{opacity:0}
+
+/* ============ PROCESS (sketch) ============ */
+.process{background:linear-gradient(180deg,var(--cream),#fff5ef)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1.6rem;margin-top:3.6rem}
+.step{text-align:center;position:relative}
+.step .draw{width:120px;height:120px;margin:0 auto 1.2rem}
+.step .draw svg{width:100%;height:100%;overflow:visible}
+.step .draw path,.step .draw circle,.step .draw line{stroke:var(--charcoal);stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.step .n{font-family:var(--hand);font-size:1.4rem;color:var(--coral)}
+.step h4{font-family:var(--display);font-weight:700;font-size:1.3rem;margin:.2rem 0 .4rem}
+.step p{font-size:.92rem;color:#5d554d;max-width:24ch;margin:0 auto}
+
+/* ============ TESTIMONIALS (floating) ============ */
+.loved{overflow:hidden}
+.float-area{position:relative;margin-top:3rem;min-height:940px}
+.tslot{position:absolute;width:min(31vw,330px);will-change:transform}
+.tslot:hover{z-index:60}
+.tcard{border-radius:24px;padding:1.5rem 1.6rem;box-shadow:0 24px 46px -30px rgba(34,34,34,.45);transition:transform .45s var(--ease),box-shadow .45s var(--ease);cursor:default}
+.tcard:hover{transform:rotate(calc(-1*var(--rot,0deg))) scale(1.06) translateY(-12px);box-shadow:0 44px 74px -34px rgba(34,34,34,.5)}
+.tcard .st{color:var(--coral);letter-spacing:2px;margin-bottom:.7rem}
+.tcard p{font-family:var(--display);font-weight:600;font-size:1.16rem;line-height:1.35}
+.tcard .who{display:flex;align-items:center;gap:.7rem;margin-top:1.1rem}
+.tcard .av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;color:#fff;flex:0 0 auto}
+.tcard .nm{font-weight:700;font-size:.92rem}
+.tcard .lo{font-size:.78rem;color:#7a7066}
+@media(max-width:820px){.float-area{min-height:0;display:flex;flex-direction:column;gap:1.1rem}.tslot{position:static!important;width:auto!important;transform:none!important}.tcard{transform:none!important}}
+/* happy-mail: horizontal review marquee (full width). Cards are hard-coded in the `ts` array. */
+.review-hwrap{position:relative;margin-top:2.6rem;overflow:hidden;padding:.6rem 0;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 6%,#000 94%,transparent 100%);
+          mask-image:linear-gradient(to right,transparent 0,#000 6%,#000 94%,transparent 100%)}
+.review-htrack{display:flex;flex-direction:row;width:max-content;will-change:transform;animation:hscroll 55s linear infinite}
+.review-hwrap:hover .review-htrack{animation-play-state:paused}
+.review-htrack .tcard{width:min(82vw,340px);flex:0 0 auto;margin-right:1.4rem;align-self:stretch;cursor:default}
+.review-htrack .tcard:hover{transform:scale(1.03) translateY(-4px)}
+@keyframes hscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){
+  /* the gentle review carousel is intentional — keep it running even with reduce-motion on */
+  .review-htrack{animation:hscroll 55s linear infinite!important}
+}
+
+/* ============ INSTA MASONRY ============ */
+.igrid{columns:4;column-gap:1rem;margin-top:3rem}
+.igrid figure{break-inside:avoid;margin-bottom:1rem;border-radius:18px;overflow:hidden;position:relative;cursor:pointer}
+.igrid .it{display:flex;align-items:center;justify-content:center}
+.igrid .it svg{width:74%;height:74%;transition:transform .8s var(--ease)}
+.igrid figure:hover .it svg{transform:scale(1.12)}
+.igrid figcaption{position:absolute;inset:0;background:rgba(34,34,34,.4);display:flex;align-items:center;justify-content:center;gap:.5rem;color:#fff;font-weight:600;opacity:0;transition:.4s var(--ease)}
+.igrid figure:hover figcaption{opacity:1}
+/* occasions */
+.occsec .lead{margin-top:.4rem;font-size:1.05rem}
+.occgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.4rem;margin-top:3rem}
+.occcard{position:relative;border-radius:22px;overflow:hidden;min-height:340px;cursor:pointer;box-shadow:0 18px 40px -28px rgba(34,34,34,.55);display:block}
+.occcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.occcard:hover img{transform:scale(1.08)}
+.occcard .ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(28,24,20,.86),rgba(28,24,20,.12) 56%,transparent);z-index:1}
+.occcard .ring{position:absolute;inset:0;border-radius:22px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.18);pointer-events:none;z-index:3}
+.occcard .meta{position:absolute;left:0;right:0;bottom:0;padding:1.3rem 1.4rem;z-index:2}
+.occcard .meta .t{font-family:var(--display);font-weight:700;font-size:1.32rem;color:#fff;line-height:1.08}
+.occcard .meta .h{font-family:var(--hand);font-size:1.2rem;color:#fff;opacity:.92;display:block;margin-top:.15rem}
+.occcard .shopnow{display:inline-flex;align-items:center;gap:.4rem;margin-top:.6rem;font-size:.82rem;font-weight:600;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);padding:.4rem .9rem;border-radius:40px;opacity:0;transform:translateY(8px);transition:.4s var(--ease)}
+.occcard:hover .shopnow{opacity:1;transform:translateY(0)}
+
+/* ============ CUSTOM ============ */
+.custom{background:var(--charcoal);color:var(--cream);border-radius:40px;margin:0 auto;max-width:1180px}
+.custom .inner{display:grid;grid-template-columns:1fr 1fr;gap:3rem;padding:clamp(36px,6vw,72px);align-items:center}
+.custom h2{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,4.6vw,3.6rem);line-height:1;letter-spacing:-.02em}
+.custom h2 em{font-style:normal;color:var(--peach)}
+.custom .cl{color:rgba(250,247,242,.65);margin:1rem 0 1.5rem;max-width:38ch}
+.cform{background:rgba(250,247,242,.05);border:1px solid rgba(250,247,242,.12);border-radius:24px;padding:1.8rem}
+.cf{margin-bottom:1rem}
+.cf label{display:block;font-size:.78rem;font-weight:600;letter-spacing:.04em;color:var(--peach);margin-bottom:.4rem}
+.cf input,.cf select,.cf textarea{width:100%;background:rgba(250,247,242,.06);border:1px solid rgba(250,247,242,.14);border-radius:14px;color:var(--cream);font-family:var(--sans);font-size:.95rem;padding:.8rem 1rem;outline:none;transition:border-color .3s}
+.cf input::placeholder,.cf textarea::placeholder{color:rgba(250,247,242,.4)}
+.cf input:focus,.cf select:focus,.cf textarea:focus{border-color:var(--coral)}
+.cf select option{color:#222}
+.cf textarea{resize:vertical;min-height:70px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.cform .btn{width:100%;justify-content:center}
+.cform .btn[disabled]{opacity:.65;pointer-events:none}
+.cf-bot{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}   /* honeypot: humans never see it */
+.cf-note{margin:.75rem 0 0;font-size:.85rem;line-height:1.5;color:var(--peach);min-height:1.2em}
+.cf-note.err{color:#ffb4a2}
+.cf-note a{color:inherit;text-decoration:underline}
+
+/* footer */
+footer{background:var(--charcoal);color:#efe9e0;margin-top:3rem}
+footer a{color:inherit}
+/* newsletter strip */
+.foot-news{border-bottom:1px solid rgba(255,255,255,.1);padding:3rem 0}
+.foot-news .wrap{display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+.foot-news h3{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,3.4vw,2.2rem);letter-spacing:-.02em;line-height:1.1}
+.foot-news p{color:rgba(239,233,224,.66);margin-top:.4rem;font-size:.95rem;max-width:34ch}
+.foot-form{display:flex;gap:.6rem;flex:0 1 460px;min-width:280px}
+.foot-form input{flex:1;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.18);color:#fff;
+  border-radius:50px;padding:.95rem 1.3rem;font-family:var(--sans);font-size:.95rem;outline:none;transition:.25s}
+.foot-form input::placeholder{color:rgba(239,233,224,.5)}
+.foot-form input:focus{border-color:var(--coral);background:rgba(255,255,255,.1)}
+.foot-form .btn{flex:0 0 auto}
+/* link columns */
+.foot-main{padding:3.4rem 0 2.6rem}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:2.4rem}
+.foot-brand .foot-logo{width:clamp(150px,18vw,190px);margin:0 0 1.1rem;border-radius:18px;background:#fff;padding:12px}
+.foot-brand p{color:rgba(239,233,224,.66);font-size:.92rem;max-width:34ch;line-height:1.7}
+.foot-col h4{font-family:var(--display);font-weight:700;font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(239,233,224,.55);margin-bottom:1.1rem}
+.foot-col ul{list-style:none}
+.foot-col li{margin-bottom:.7rem}
+.foot-col a{font-size:.95rem;color:rgba(239,233,224,.85);cursor:pointer;transition:color .25s,padding .25s;display:inline-block}
+.foot-col a:hover{color:var(--coral);padding-left:4px}
+/* trust badges */
+.foot-trust{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.6rem}
+.foot-trust span{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:500;
+  color:rgba(239,233,224,.8);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  padding:.45rem .85rem;border-radius:40px}
+/* socials */
+footer .socials{display:flex;gap:.7rem;margin-top:1.4rem}
+footer .socials a{width:42px;height:42px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.85rem;transition:.3s}
+footer .socials a:hover{background:var(--coral);border-color:var(--coral);color:#fff;transform:translateY(-2px)}
+/* bottom bar */
+.foot-bar{border-top:1px solid rgba(255,255,255,.1);padding:1.5rem 0}
+.foot-bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.foot-bar .fine{font-size:.82rem;color:rgba(239,233,224,.55)}
+.foot-bar .legal{display:flex;gap:1.4rem;flex-wrap:wrap}
+.foot-bar .legal a{font-size:.82rem;color:rgba(239,233,224,.6);transition:color .25s}
+.foot-bar .legal a:hover{color:var(--coral)}
+@media(max-width:860px){
+  .foot-grid{grid-template-columns:1fr 1fr;gap:2rem}
+  .foot-brand{grid-column:1/-1}
+  .foot-news .wrap{flex-direction:column;align-items:stretch}
+  /* reset: in a column the 460px basis became a height — keep the form a normal-height row */
+  .foot-form{flex:0 0 auto;width:100%;min-width:0;align-items:center}
+}
+@media(max-width:520px){.foot-grid{grid-template-columns:1fr}.foot-bar .wrap{flex-direction:column;align-items:flex-start}}
+@media(max-width:430px){
+  .foot-form{flex-direction:column;align-items:stretch}
+  .foot-form .btn{width:100%;justify-content:center}
+}
+
+/* ===== about us ===== */
+.about-grid{display:grid;grid-template-columns:1fr 1.12fr;gap:clamp(28px,6vw,76px);align-items:center;margin-top:1.4rem}
+.about-media{position:relative}
+.about-media .frame{border-radius:26px;overflow:hidden;aspect-ratio:4/5;background:var(--peach);
+  box-shadow:0 40px 72px -38px rgba(34,34,34,.55)}
+.about-media .frame img{width:100%;height:100%;object-fit:cover;display:block}
+.about-media .mini{position:absolute;right:-18px;bottom:-24px;width:42%;aspect-ratio:1/1;border-radius:18px;
+  overflow:hidden;border:6px solid #fff;background:var(--sage);transform:rotate(5deg);
+  box-shadow:0 26px 46px -26px rgba(34,34,34,.5)}
+.about-media .mini img{width:100%;height:100%;object-fit:cover;display:block}
+.about-media .note{position:absolute;left:-14px;top:-16px;z-index:2;background:#fff;font-family:var(--hand);
+  font-size:1.45rem;color:var(--coral);padding:.45rem 1.05rem;border-radius:40px;transform:rotate(-6deg);
+  box-shadow:0 16px 30px -16px rgba(34,34,34,.42)}
+.about-copy p{color:#564e47;font-size:1.06rem;line-height:1.78;margin-top:1rem;max-width:54ch}
+.about-stats{display:flex;gap:clamp(1.6rem,4vw,2.6rem);margin:1.9rem 0 1.7rem;flex-wrap:wrap}
+.about-stats div{display:flex;flex-direction:column}
+.about-stats b{font-family:var(--display);font-weight:800;font-size:clamp(1.7rem,4vw,2.1rem);line-height:1;color:var(--charcoal)}
+.about-stats span{font-size:.85rem;color:#8a8076;margin-top:.32rem}
+@media(max-width:820px){
+  .about-grid{grid-template-columns:1fr;gap:3rem}
+  .about-media{max-width:380px;margin:0 auto 1rem}
+}
+
+/* ===== PDP policy notice ===== */
+.pdp-policy{margin:1.6rem 0 1.8rem;border:1.5px solid rgba(255,138,128,.45);background:#fff6f2;
+  border-radius:18px;padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:.95rem}
+.pp-item{display:flex;gap:.8rem;align-items:flex-start}
+.pp-ic{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:#fff;border:1.5px solid rgba(255,138,128,.5);
+  display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:var(--coral)}
+.pp-item b{display:block;font-size:.95rem;font-weight:700;color:var(--charcoal);margin-bottom:.15rem}
+.pp-item p{font-size:.84rem;line-height:1.55;color:#6b6258;margin:0}
+
+/* ===== sticky whatsapp button ===== */
+.wa-fab{position:fixed;right:clamp(16px,4vw,26px);bottom:clamp(16px,4vw,26px);z-index:190;
+  width:58px;height:58px;border-radius:50%;background:#25D366;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 14px 30px -10px rgba(37,211,102,.65),0 6px 16px -8px rgba(0,0,0,.35);
+  transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
+.wa-fab svg{width:31px;height:31px;position:relative;z-index:1;transform:translate(1px,-1px)}
+.wa-fab:hover{transform:scale(1.09);box-shadow:0 18px 38px -12px rgba(37,211,102,.8),0 8px 18px -8px rgba(0,0,0,.4)}
+.wa-fab::before{content:"";position:absolute;inset:0;border-radius:50%;background:#25D366;z-index:0;
+  animation:wa-pulse 2.4s ease-out infinite}
+@keyframes wa-pulse{0%{transform:scale(1);opacity:.55}70%{transform:scale(1.75);opacity:0}100%{transform:scale(1.75);opacity:0}}
+@media(max-width:820px){.wa-fab{width:52px;height:52px}.wa-fab svg{width:28px;height:28px}}
+@media(prefers-reduced-motion:reduce){.wa-fab::before{animation:none}}
+
+/* ===== cart & favourites ===== */
+.nav-actions{display:flex;align-items:center;gap:.4rem}
+.nav-ic{position:relative;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--charcoal);
+  background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.12rem;
+  color:var(--charcoal);transition:background .25s,color .25s,transform .25s}
+.nav-ic:hover{background:var(--charcoal);color:#fff}
+.nav-ic.fav-on{color:var(--coral);border-color:var(--coral)}
+.nav-ic.fav-on:hover{background:var(--coral);color:#fff}
+.ic-count{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:20px;
+  background:var(--coral);color:#fff;font-size:.66rem;font-weight:700;font-family:var(--sans);
+  display:none;align-items:center;justify-content:center;box-shadow:0 2px 6px -1px rgba(34,34,34,.4)}
+.ic-count.show{display:flex}
+.pop{animation:pop .4s var(--ease)}
+@keyframes pop{0%{transform:scale(1)}38%{transform:scale(1.4)}100%{transform:scale(1)}}
+
+/* drawer */
+.drawer-back{position:fixed;inset:0;z-index:500;background:rgba(20,16,14,.42);
+  opacity:0;visibility:hidden;transition:opacity .4s var(--ease),visibility .4s}
+.drawer-back.open{opacity:1;visibility:visible}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,92vw);z-index:501;background:var(--cream);
+  display:flex;flex-direction:column;transform:translateX(100%);transition:transform .45s var(--ease);
+  box-shadow:-30px 0 60px -30px rgba(34,34,34,.5)}
+.drawer.open{transform:none}
+.drawer-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:1.3rem clamp(18px,4vw,26px);border-bottom:1px solid rgba(34,34,34,.1)}
+.drawer-head h3{font-family:var(--display);font-weight:800;font-size:1.28rem;display:flex;align-items:center;gap:.5rem}
+.drawer-head .x{background:none;border:0;font-size:1.7rem;line-height:1;cursor:pointer;color:var(--charcoal);padding:0 .2rem}
+.drawer-body{flex:1;overflow-y:auto;padding:clamp(12px,3vw,18px) clamp(16px,4vw,24px)}
+.drawer-foot{flex:0 0 auto;padding:clamp(16px,3vw,22px) clamp(16px,4vw,24px);border-top:1px solid rgba(34,34,34,.1);background:#fff}
+.drawer-foot:empty{display:none}
+.drawer-empty{text-align:center;padding:3.4rem 1rem;color:#8a8076}
+.drawer-empty .emo{font-size:2.6rem;display:block;margin-bottom:.7rem}
+.drawer-empty .btn{margin-top:1.3rem}
+/* line item */
+.litem{display:flex;gap:.9rem;padding:.95rem 0;border-bottom:1px solid rgba(34,34,34,.08)}
+.litem:last-child{border-bottom:0}
+.litem .thumb{width:74px;height:74px;flex:0 0 auto;border-radius:14px;overflow:hidden;background:#fff;cursor:pointer;
+  box-shadow:0 8px 18px -12px rgba(34,34,34,.4)}
+.litem .thumb img{width:100%;height:100%;object-fit:cover}
+.litem .li-main{flex:1;min-width:0}
+.litem .li-name{font-weight:600;font-size:.94rem;line-height:1.3;cursor:pointer}
+.litem .li-name:hover{color:var(--coral)}
+.litem .li-cat{font-size:.76rem;color:#8a8076;margin:.12rem 0 .4rem}
+.litem .li-price{font-weight:700;font-size:.92rem}
+.litem .li-row{display:flex;align-items:center;justify-content:space-between;margin-top:.55rem;gap:.6rem}
+.qty{display:inline-flex;align-items:center;border:1.5px solid rgba(34,34,34,.2);border-radius:30px;overflow:hidden}
+.qty button{width:28px;height:28px;border:0;background:none;cursor:pointer;font-size:1.05rem;color:var(--charcoal);line-height:1}
+.qty button:hover{background:rgba(34,34,34,.07)}
+.qty span{min-width:26px;text-align:center;font-weight:600;font-size:.86rem}
+.li-rm{background:none;border:0;cursor:pointer;color:#a08f86;font-size:.78rem;text-decoration:underline;padding:0}
+.li-rm:hover{color:var(--coral)}
+.li-add{background:none;border:0;cursor:pointer;color:var(--charcoal);font-size:.82rem;font-weight:600;text-decoration:underline;padding:0}
+.li-add:hover{color:var(--coral)}
+.cart-sum{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.35rem;font-size:.92rem}
+.cart-sum .lbl{color:#8a8076}
+.cart-sum.total{font-family:var(--display);font-weight:800;font-size:1.2rem;margin:.6rem 0 .9rem}
+.cart-ship{font-size:.78rem;color:#8a8076;margin-bottom:.9rem}
+.drawer-foot .btn{width:100%;justify-content:center}
+/* product-card heart (category grid) */
+.pcard .pi{position:relative}
+.pcard-heart{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;border:0;
+  background:rgba(255,255,255,.94);cursor:pointer;font-size:1rem;color:var(--coral);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -8px rgba(34,34,34,.5);
+  transition:transform .25s,background .25s;z-index:3}
+.pcard-heart:hover{transform:scale(1.14)}
+.pcard-heart.on{background:var(--coral);color:#fff}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(34px)}
+
+/* ============ INFINITE CURVED WALL ============ */
+.wall-sec{padding:1.2rem 0 1.4rem;overflow:hidden}
+.wall-kick{text-align:center;font-size:1.6rem;color:var(--coral);margin-bottom:.3rem}
+.wall-stage{position:relative;height:clamp(700px,96vh,1080px);overflow:hidden;perspective:1500px;perspective-origin:50% 50%}
+.wall{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem;transform-style:preserve-3d}
+.wall .row{display:flex;overflow:hidden;width:100%;will-change:transform,filter;transform-origin:center center;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.wall .track{display:flex;flex:0 0 auto;will-change:transform}
+.wall .row[data-dir="l"] .track{animation:wall-l linear infinite}
+.wall .row[data-dir="r"] .track{animation:wall-r linear infinite}
+.wall .row:hover .track{animation-play-state:paused}
+@keyframes wall-l{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes wall-r{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.wtile{flex:0 0 auto;width:clamp(132px,14vw,174px);margin-right:.8rem;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 16px 30px -24px rgba(34,34,34,.55);transition:transform .4s var(--ease)}
+.wtile:hover{transform:scale(1.06)}
+.wtile .wph{aspect-ratio:1/1.9;display:flex;align-items:center;justify-content:center}
+.wtile .wph svg{width:82%;height:82%}
+.wtile .wph img{width:100%;height:100%;object-fit:cover;display:block}
+.wtile .wcap{position:absolute;left:8px;bottom:8px;background:rgba(255,255,255,.85);backdrop-filter:blur(4px);border-radius:40px;font-size:.66rem;font-weight:600;padding:.26rem .58rem}
+.wfade{position:absolute;left:0;right:0;height:24%;pointer-events:none;z-index:6}
+.wtop{top:-1px;background:linear-gradient(to bottom,var(--cream),rgba(250,247,242,.85) 28%,transparent)}
+.wbot{bottom:-1px;background:linear-gradient(to top,var(--cream),rgba(250,247,242,.85) 28%,transparent)}
+
+/* ============ SHOP OVERLAY ============ */
+.shop-ov{position:fixed;inset:0;z-index:300;background:var(--cream);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .45s var(--ease),transform .45s var(--ease),visibility .45s}
+.shop-ov.open{opacity:1;visibility:visible;transform:none}
+.ov-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem clamp(20px,5vw,56px);background:rgba(250,247,242,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(34,34,34,.08);position:sticky;top:0;z-index:5}
+.ov-title{font-family:var(--display);font-weight:700;font-size:1.15rem}
+.ov-back,.ov-close{background:#fff;border:1px solid rgba(34,34,34,.1);cursor:pointer;font-family:var(--sans);font-weight:600;border-radius:50px;transition:.3s}
+.ov-back{font-size:.84rem;padding:.5rem 1rem;opacity:0;pointer-events:none}
+.shop-ov.in-pdp .ov-back{opacity:1;pointer-events:auto}
+.ov-close{width:42px;height:42px;font-size:1.5rem;line-height:1;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.ov-back:hover,.ov-close:hover{background:var(--coral);color:#fff;border-color:var(--coral)}
+.ov-body{flex:1;overflow:hidden;position:relative}
+.cat-bg{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.cat-bg .cb{position:absolute;border-radius:50%;filter:blur(72px);mix-blend-mode:multiply;will-change:transform}
+.cat-bg .cb1{width:48vmax;height:48vmax;left:-14vmax;top:-16vmax;background:var(--cat,var(--peach));opacity:.5;animation:cfloat 19s ease-in-out infinite}
+.cat-bg .cb2{width:40vmax;height:40vmax;right:-13vmax;top:26%;background:var(--lav);opacity:.4;animation:cfloat 26s ease-in-out infinite reverse}
+.cat-bg .cb3{width:34vmax;height:34vmax;bottom:-15vmax;left:32%;background:var(--cat,var(--sage));opacity:.34;animation:cfloat 22s ease-in-out infinite}
+.cat-bg .swirl{position:absolute;top:50%;left:50%;width:78vmax;height:78vmax;transform:translate(-50%,-50%);opacity:.05;color:var(--cat,var(--coral));background:repeating-conic-gradient(from 0deg,currentColor 0 .6deg,transparent .6deg 9deg);-webkit-mask:radial-gradient(closest-side,transparent 30%,#000 42%,#000 70%,transparent 86%);mask:radial-gradient(closest-side,transparent 30%,#000 42%,#000 70%,transparent 86%);animation:cspin 120s linear infinite}
+@media(prefers-reduced-motion:reduce){.cat-bg .cb,.cat-bg .swirl{animation:none}}
+.cat-view{position:absolute;inset:0;z-index:1;overflow-y:auto;padding:clamp(24px,4vw,52px) clamp(20px,5vw,56px) 4rem}
+.cat-head{margin-bottom:2rem}
+.cat-head .ek{font-family:var(--hand);font-size:1.5rem;color:var(--coral)}
+.cat-head h2{font-family:var(--display);font-weight:800;font-size:clamp(1.8rem,4vw,2.8rem);line-height:1;margin-top:.3rem}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.5rem}
+.pcard{background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;border:1px solid rgba(34,34,34,.06);transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
+.pcard:hover{transform:translateY(-6px);box-shadow:0 30px 50px -34px rgba(34,34,34,.5)}
+.pcard .pi{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.pcard .pi svg{width:76%;height:76%;transition:transform .5s var(--ease)}
+.pcard .pi img{width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease)}
+.pcard:hover .pi svg{transform:scale(1.07) rotate(4deg)}
+.pcard:hover .pi img{transform:scale(1.06)}
+.pcard .pbadge{position:absolute;top:12px;left:12px;background:var(--coral);color:#fff;font-size:.66rem;font-weight:700;letter-spacing:.04em;padding:.3rem .65rem;border-radius:40px}
+.pcard .pb{padding:1rem 1.1rem 1.2rem}
+.pcard .pb h3{font-family:var(--display);font-weight:700;font-size:1.08rem;line-height:1.2}
+.pcard .prow{display:flex;align-items:center;justify-content:space-between;margin-top:.5rem}
+.pcard .price{font-family:var(--display);font-weight:700;font-size:1.05rem}
+.pcard .price s{color:#b3a99e;font-weight:400;font-size:.82rem;margin-right:.35rem}
+.stars{color:var(--coral);letter-spacing:1px;font-size:.82rem}
+.stars .e{color:#e0d6c8}
+.pcard .rc{font-size:.74rem;color:#8a8076}
+
+/* PDP */
+.pdp-view{position:absolute;inset:0;z-index:2;overflow-y:auto;background:var(--cream);transform:translateX(100%);transition:transform .5s var(--ease);padding:clamp(24px,4vw,52px) clamp(20px,5vw,56px) 5rem}
+.shop-ov.in-pdp .pdp-view{transform:translateX(0)}
+.pdp-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);max-width:1100px;margin:0 auto}
+.pdp-gal .main{border-radius:22px;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:var(--cream);box-shadow:0 30px 60px -40px rgba(34,34,34,.5)}
+.pdp-gal .main svg{width:72%;height:72%}
+.pdp-gal .main img{width:100%;height:100%;object-fit:contain}
+.pdp-gal .thumbs{display:flex;gap:.7rem;margin-top:.9rem}
+.pdp-gal .thumbs button{flex:1;aspect-ratio:1;border-radius:14px;border:2px solid transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.3s}
+.pdp-gal .thumbs button svg{width:70%;height:70%}
+.pdp-gal .thumbs button.active{border-color:var(--coral)}
+.pdp-info .cat{font-family:var(--hand);font-size:1.3rem;color:var(--coral)}
+.pdp-info h1{font-family:var(--display);font-weight:800;font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.04;margin:.2rem 0 .6rem}
+.pdp-rate{display:flex;align-items:center;gap:.6rem;font-size:.86rem;color:#6a625b;margin-bottom:1rem}
+.pdp-price{font-family:var(--display);font-weight:800;font-size:2rem;margin-bottom:.2rem}
+.pdp-price s{font-weight:400;font-size:1.1rem;color:#b3a99e;margin-right:.5rem}
+.pdp-price .off{font-family:var(--sans);font-size:.8rem;font-weight:700;color:#fff;background:var(--sage);padding:.2rem .6rem;border-radius:40px;margin-left:.6rem;vertical-align:middle}
+.pdp-tax{font-size:.78rem;color:#8a8076;margin-bottom:1.3rem}
+.pdp-desc{color:#5d554d;margin-bottom:1.4rem;line-height:1.7}
+.pdp-specs{list-style:none;margin-bottom:1.6rem;border-top:1px solid rgba(34,34,34,.1)}
+.pdp-specs li{display:flex;justify-content:space-between;gap:1rem;padding:.7rem 0;border-bottom:1px solid rgba(34,34,34,.1);font-size:.9rem}
+.pdp-specs li span:first-child{color:#8a8076}
+.pdp-specs li span:last-child{font-weight:600;text-align:right}
+.pdp-actions{display:flex;gap:.8rem;flex-wrap:wrap}
+.pdp-actions .btn{flex:1;justify-content:center;min-width:160px}
+.pdp-actions .wish{flex:0 0 auto;width:54px;border-radius:50px;background:#fff;border:1.5px solid rgba(34,34,34,.15);cursor:pointer;font-size:1.2rem;color:var(--coral);transition:.3s}
+.pdp-actions .wish.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+/* reviews */
+.pdp-reviews{max-width:1100px;margin:3.5rem auto 0}
+.pdp-reviews h3{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,3vw,2.2rem);margin-bottom:.4rem}
+.rev-summary{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;flex-wrap:wrap;margin:1rem 0 1.2rem;padding:1.4rem 1.6rem;background:#fff;border-radius:18px;border:1px solid rgba(34,34,34,.06)}
+.rev-summary .big{font-family:var(--display);font-weight:800;font-size:2.6rem;line-height:1}
+.rev-score{display:flex;align-items:center;gap:1.4rem}
+.rev-open{white-space:nowrap}
+.rev-form{background:#fff;border:1px solid rgba(34,34,34,.08);border-radius:18px;padding:1.4rem 1.6rem;margin:0 0 2rem;display:grid;gap:.85rem}
+.rev-form[hidden]{display:none}
+.rf-label{font-weight:600;font-size:.9rem;color:#564e47}
+.rf-stars{display:flex;gap:.25rem;font-size:1.7rem;color:#d8cfc6;cursor:pointer;width:max-content}
+.rf-stars span{transition:color .15s,transform .15s}
+.rf-stars span:hover{transform:scale(1.12)}
+.rf-stars span.on{color:var(--coral)}
+.rf-row{display:flex;gap:.8rem;flex-wrap:wrap}
+.rf-row input{flex:1;min-width:160px}
+.rev-form input,.rev-form textarea{width:100%;border:1.5px solid rgba(34,34,34,.15);border-radius:12px;padding:.7rem .9rem;font-family:var(--sans);font-size:.92rem;background:#faf7f2;color:var(--charcoal);outline:none;transition:border-color .2s,background .2s}
+.rev-form input:focus,.rev-form textarea:focus{border-color:var(--coral);background:#fff}
+.rev-form textarea{min-height:84px;resize:vertical}
+.rf-actions{display:flex;gap:.7rem;flex-wrap:wrap}
+.rev .you{font-size:.66rem;font-weight:700;color:var(--coral);background:#fff1ec;padding:.12rem .5rem;border-radius:20px;margin-left:.4rem;vertical-align:middle}
+.rev-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem}
+.rev{background:#fff;border-radius:16px;padding:1.3rem 1.4rem;border:1px solid rgba(34,34,34,.06)}
+.rev .top{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem}
+.rev .av{width:38px;height:38px;border-radius:50%;background:var(--lav);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700}
+.rev .nm{font-weight:700;font-size:.9rem}
+.rev .loc{font-size:.72rem;color:#8a8076}
+.rev p{font-size:.92rem;color:#4f4943;line-height:1.55}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--charcoal);color:#fff;padding:.9rem 1.6rem;border-radius:50px;font-weight:600;font-size:.9rem;z-index:950;opacity:0;transition:.4s var(--ease);pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:760px){.pdp-grid{grid-template-columns:1fr}}
+
+/* responsive */
+@media(max-width:1024px){
+  .collgrid{grid-template-columns:repeat(2,1fr)}
+  .igrid{columns:3}
+  .pinwall{grid-template-columns:repeat(3,1fr)}
+  .steps{grid-template-columns:repeat(2,1fr);gap:2.4rem}
+}
+@media(max-width:820px){
+  .nav .links{display:none}.burger{display:flex}
+  .nav-actions{margin-left:auto}      /* icons + burger cluster on the right */
+  .burger{margin-left:.3rem;padding:8px}
+  /* nav: light glass over the photo at the top, solidifies on scroll */
+  .nav{background:rgba(255,255,255,.74);box-shadow:0 8px 24px -18px rgba(34,34,34,.35);transition:background .4s var(--ease),box-shadow .4s var(--ease)}
+  .nav.nav-solid{background:rgba(255,255,255,.97);box-shadow:0 18px 44px -22px rgba(34,34,34,.4)}
+  /* frost the top gap so content blurs cleanly as it scrolls past the floating nav */
+  .top-blur{display:block;position:fixed;top:0;left:0;right:0;height:92px;z-index:198;pointer-events:none;
+    -webkit-backdrop-filter:blur(11px);backdrop-filter:blur(11px);
+    background:linear-gradient(to bottom,rgba(247,245,242,.5),rgba(247,245,242,0));
+    -webkit-mask-image:linear-gradient(to bottom,#000 62%,transparent);mask-image:linear-gradient(to bottom,#000 62%,transparent)}
+  /* ===== editorial mobile hero (split: photo on top, cream text panel below) ===== */
+  .hero{min-height:100svh;min-height:100vh;padding-top:0;position:relative;overflow:hidden;background:#F7F5F2}
+  .stage{display:none!important}              /* desktop hero hidden on mobile */
+  .mhero{display:flex;flex-direction:column;width:100%;min-height:100svh;min-height:100vh;background:#F7F5F2;font-family:'Manrope',var(--sans)}
+  .mhero-top{position:relative;flex:0 0 auto;height:56vh;min-height:360px;overflow:hidden;background:#F7F5F2}
+  .mhero-bgwrap{position:absolute;inset:0;z-index:0;will-change:transform}
+  .mhero-bg{width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block;transform:scale(1.06);animation:kenburns 9s cubic-bezier(.16,1,.3,1) forwards;animation-play-state:paused}
+  /* soft fade so the photo melts into the cream panel below */
+  .mhero-fade{position:absolute;left:0;right:0;bottom:-1px;height:34%;z-index:2;pointer-events:none;
+    background:linear-gradient(to top,#F7F5F2 0%,rgba(247,245,242,.85) 34%,rgba(247,245,242,0) 100%)}
+  .mhero-content{flex:1 1 auto;background:#F7F5F2;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+    padding:1.1rem clamp(22px,6.4vw,30px) calc(env(safe-area-inset-bottom,0px) + 1.3rem)}
+  .mhero-label{font-family:var(--hand);font-size:1.5rem;line-height:1;color:#D97B73;margin-bottom:.25rem}
+  .mhero-title{font-family:'DM Serif Display',serif;font-weight:400;color:#1F1F1F;display:flex;flex-direction:column;
+    font-size:clamp(2.7rem,13vw,3.9rem);line-height:1.0;letter-spacing:-.01em}
+  .mhero-title .accent{color:#D97B73;font-style:normal}
+  .mhero-squiggle{width:clamp(130px,42vw,170px);height:auto;margin-top:.2rem;overflow:visible}
+  .mhero-desc{color:#76685D;font-size:.98rem;line-height:1.5;max-width:34ch;margin:.7rem 0 0}
+  .mhero-cta{display:flex;flex-direction:column;gap:.6rem;width:100%;margin-top:1.05rem}
+  .mhero-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center;
+    background:#D97B73;color:#fff;border-radius:16px;padding:.85rem 1.4rem;box-shadow:0 16px 30px -12px rgba(217,123,115,.72);
+    transition:transform .5s cubic-bezier(.34,1.56,.64,1),box-shadow .3s}
+  .mhero-btn:active{transform:scale(.96)}
+  .mhero-btn .bt1{font-weight:700;font-size:1.04rem}
+  .mhero-btn .bt2{font-weight:400;font-size:.76rem;opacity:.88}
+  .mhero-watch{display:inline-flex;align-items:center;gap:.55rem;align-self:center;color:#1F1F1F;font-weight:600;font-size:.92rem;
+    padding:.45rem .2rem;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+  .mhero-watch:active{transform:scale(.96)}
+  .mhero-watch .play{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;
+    background:rgba(31,31,31,.07);color:#D97B73;font-size:.58rem;padding-left:2px}
+  .mhero-badges{display:flex;flex-wrap:wrap;gap:.45rem 1.1rem;margin-top:.9rem}
+  .mhero-badges span{display:inline-flex;align-items:center;gap:.35rem;color:#76685D;font-size:.74rem;font-weight:600}
+  .mhero-badges i{font-style:normal;color:#D97B73}
+  .petal{position:absolute;z-index:2;width:16px;height:16px;border-radius:0 60% 60% 60%;pointer-events:none;opacity:.5;filter:blur(.3px);
+    background:radial-gradient(circle at 30% 30%,rgba(217,123,115,.55),rgba(217,123,115,.16));animation:floaty 11s ease-in-out infinite}
+  .petal.pt1{left:12%;top:15%}
+  .petal.pt2{right:16%;top:23%;width:12px;height:12px;animation-duration:13s;animation-delay:-3s}
+  .petal.pt3{left:24%;top:33%;width:10px;height:10px;animation-duration:10s;animation-delay:-5s;opacity:.38}
+  .petal.pt4{right:26%;top:11%;width:14px;height:14px;animation-duration:14s;animation-delay:-2s;opacity:.44}
+  .mhero-scroll{display:none}
+  .reveal{opacity:0;transform:translateY(22px);animation:rise .9s cubic-bezier(.16,1,.3,1) forwards;animation-delay:var(--d,0ms);animation-play-state:paused}
+  .mhero.go .mhero-bg,.mhero.go .reveal{animation-play-state:running}
+  .tape,.pin{display:none}
+  .custom{margin-left:clamp(14px,4vw,20px);margin-right:clamp(14px,4vw,20px);border-radius:28px}
+  .custom .inner{grid-template-columns:1fr;padding:clamp(24px,6vw,34px)}
+  .cform{padding:1.3rem}
+  .igrid{columns:2}
+  .pinwall{grid-template-columns:repeat(2,1fr);gap:.9rem}
+}
+@media(max-width:560px){.collgrid{grid-template-columns:1fr}.two{grid-template-columns:1fr}.logo-txt small{display:none}}
+/* navbar — small phones */
+@media(max-width:600px){
+  .nav{padding:.4rem .8rem .4rem .55rem}
+  .nav-brand{height:40px;margin-left:.2rem}
+  .logo-txt b{font-size:1.04rem}
+  .nav-actions{gap:.3rem}
+  .nav-ic{width:40px;height:40px;font-size:1.05rem}
+}
+@media(max-width:430px){
+  .nav{width:94vw;padding:.38rem .6rem .38rem .5rem}
+  .nav-brand{display:none}              /* drop logo image, keep the wordmark */
+  .nav .logo{gap:0}
+  .logo-txt b{font-size:1rem}
+  .nav-ic{width:37px;height:37px;font-size:1rem}
+  .burger{padding:7px;margin-left:.15rem}
+}
+@media(max-width:350px){
+  .logo-txt b{font-size:.9rem}
+  .nav-ic{width:34px;height:34px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}.rv{opacity:1;transform:none}.wall .row{mask-image:none;-webkit-mask-image:none;overflow-x:auto;transform:none!important;filter:none!important;opacity:1!important}}
+
+/* ===== intro loader ===== */
+html.loading,html.loading body{overflow:hidden!important}
+#loader{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+  background:#c8c3b8;  /* sampled from the frame backgrounds so any edges blend invisibly */
+  transition:opacity 1s var(--ease),visibility 1s var(--ease)}
+#loader.done{opacity:0;visibility:hidden;pointer-events:none}
+.loader-stage{position:relative;width:min(62vw,620px);max-width:90vw;aspect-ratio:16/9;
+  overflow:hidden;background:#c8c3b8;  /* same as page bg so edges vanish */
+  opacity:0;transform:scale(.985);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+#loader.ready .loader-stage{opacity:1;transform:none}
+.loader-video{width:100%;height:100%;display:block;object-fit:contain}
+.loader-meta{position:absolute;left:50%;bottom:clamp(26px,7vh,64px);transform:translateX(-50%);
+  width:min(82vw,420px);text-align:center;z-index:1}
+.loader-word{font-family:var(--display);font-weight:800;letter-spacing:-.01em;
+  font-size:clamp(1.1rem,3.4vw,1.7rem);color:var(--charcoal);margin-bottom:.7rem;
+  text-shadow:0 2px 14px rgba(255,255,255,.55)}
+.loader-word .cr{color:var(--coral)}
+.loader-word small{display:block;font-family:var(--hand);font-weight:600;font-size:.95rem;color:#7c7264;letter-spacing:0}
+.loader-bar{position:relative;height:4px;border-radius:40px;background:rgba(34,34,34,.18);overflow:hidden;
+  box-shadow:0 1px 6px rgba(0,0,0,.12)}
+.loader-bar i{position:absolute;inset:0 100% 0 0;background:linear-gradient(90deg,var(--peach),var(--coral));
+  border-radius:40px;transition:right .35s var(--ease)}
+@media (prefers-reduced-motion:reduce){
+  .loader-stage,#loader{transition:opacity .4s linear}
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO LOADER -->
+<div id="loader" role="status" aria-label="Loading The Crafty Cornerr">
+  <div class="loader-stage">
+    <video class="loader-video" id="loaderVideo" muted playsinline webkit-playsinline autoplay preload="auto" disablepictureinpicture>
+      <source src="loader.mp4?v=2" type="video/mp4">
+    </video>
+  </div>
+  <div class="loader-meta">
+    <div class="loader-word">The Crafty <span class="cr">Cornerr</span><small>handmade happiness in every corner</small></div>
+  </div>
+</div>
+<script>
+(function(){
+  var html=document.documentElement;
+  html.classList.add('loading');
+  var loader=document.getElementById('loader');
+  var video=document.getElementById('loaderVideo');
+  var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var PLAYBACK_RATE=2.2;            // speed up the clip so the intro stays snappy
+
+  function finish(){
+    if(finish.done)return; finish.done=true;
+    loader.classList.add('done');
+    html.classList.remove('loading');
+    // hand scrolling back to Lenis if it spun up while we were covering the page
+    if(window.lenis && window.lenis.start)window.lenis.start();
+    window.dispatchEvent(new Event('intro:done'));
+    setTimeout(function(){ loader.parentNode && loader.parentNode.removeChild(loader); },1100);
+  }
+
+  // Reveal the stage as soon as the video has a frame to show (no black flash).
+  video.addEventListener('loadeddata',function(){ loader.classList.add('ready'); });
+  video.addEventListener('canplay',function(){ loader.classList.add('ready'); try{video.playbackRate=PLAYBACK_RATE;}catch(e){} });
+  video.addEventListener('playing',function(){ loader.classList.add('ready'); started=true; });
+  video.addEventListener('ended', finish);
+  video.addEventListener('error', finish);
+
+  // Kick off playback (mobile browsers need an explicit muted play() call).
+  var started=false;
+  function tryPlay(){ try{video.muted=true;}catch(e){} var p=video.play(); if(p&&p.catch)p.catch(function(){}); }
+  tryPlay();
+  if(video.readyState<2)video.addEventListener('canplay',tryPlay,{once:true});
+  // If autoplay is blocked entirely (e.g. iOS Low Power Mode), don't trap the visitor.
+  setTimeout(function(){ if(!started && (!video.currentTime || video.paused))finish(); },3500);
+
+  // Safety valve: never trap the visitor behind the loader.
+  setTimeout(finish,9000);
+})();
+</script>
+
+<!-- NAV -->
+<div class="topblur" aria-hidden="true"></div>
+<nav class="nav">
+  <a class="logo" href="#top" aria-label="The Crafty Cornerr — home">
+    <img class="nav-brand" alt="The Crafty Cornerr — handmade happiness in every corner">
+    <span class="logo-txt"><b>The <span class="cr">Crafty</span> Cornerr</b><small>handmade happiness in every corner</small></span>
+  </a>
+  <div class="links">
+    <a href="#collections">Shop</a>
+    <a href="#trending">Trending</a>
+    <a href="#about">About</a>
+    <a href="#gallery">Occasions</a>
+    <a href="support.html">Support</a>
+    <a href="#custom" class="btn coral" style="padding:.6rem 1.2rem">Custom order</a>
+  </div>
+  <div class="nav-actions">
+    <button class="nav-ic" id="favBtn" aria-label="Favourites">♡<span class="ic-count" id="favCount">0</span></button>
+    <button class="nav-ic" id="cartBtn" aria-label="Cart">🛍<span class="ic-count" id="cartCount">0</span></button>
+  </div>
+  <button class="burger" id="burger"><span></span><span></span><span></span></button>
+</nav>
+<div class="top-blur" aria-hidden="true"></div>
+<div class="mobile" id="mobile">
+  <img class="brandlogo" style="width:130px;margin-bottom:.6rem" alt="The Crafty Corner">
+  <a href="#collections">Shop</a><a href="#trending">Trending</a><a href="#about">About</a><a href="#gallery">Occasions</a><a href="support.html">Support</a><a href="#custom">Custom order</a><a data-open="fav">Favourites</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="top">
+
+  <!-- ===== editorial mobile hero (mobile only) ===== -->
+  <div class="mhero" id="mhero">
+    <div class="mhero-top">
+      <div class="mhero-bgwrap" id="mheroParallax">
+        <img class="mhero-bg" src="hero-doorway.jpg" alt="A handmade peacock mat styled at an elegant Indian home entrance with a toran and lit diya">
+      </div>
+      <span class="petal pt1"></span>
+      <span class="petal pt2"></span>
+      <span class="petal pt3"></span>
+      <span class="petal pt4"></span>
+      <div class="mhero-fade"></div>
+      <!-- Diwali-only featured product showcase in the mobile hero banner -->
+      <div class="mh-feature">
+        <span class="mh-eyebrow">✦ The Diwali Edit ✦</span>
+        <div class="mh-card"><img data-pimg="pk1" alt="Peacock Rangoli — handmade rangoli"></div>
+        <span class="mh-cap">Peacock Rangoli</span>
+      </div>
+    </div>
+    <div class="mhero-content">
+      <span class="mhero-label reveal" style="--d:0ms">made by hand</span>
+      <h1 class="mhero-title">
+        <span class="reveal" style="--d:120ms">Handmade</span>
+        <span class="reveal" style="--d:240ms">happy <em class="accent">homes.</em></span>
+        <svg class="mhero-squiggle reveal" style="--d:340ms" viewBox="0 0 360 30" aria-hidden="true"><path d="M4 18 Q60 4 120 16 T240 16 T356 12" fill="none" stroke="#D97B73" stroke-width="6" stroke-linecap="round"/></svg>
+      </h1>
+      <p class="mhero-desc reveal" style="--d:560ms">Designed by skilled artisans to make every entrance warm, welcoming, and uniquely yours.</p>
+      <div class="mhero-cta reveal" style="--d:680ms">
+        <a class="mhero-btn" href="#collections">
+          <span class="bt1">Explore Collection</span>
+          <span class="bt2">Discover handcrafted designs</span>
+        </a>
+        <a class="mhero-watch" href="#process">
+          <span class="play">▶</span> Watch Our Process
+        </a>
+      </div>
+      <div class="mhero-badges reveal" style="--d:800ms">
+        <span><i>✦</i> 100% Handmade</span>
+        <span><i>🌿</i> Eco Friendly</span>
+        <span><i>★</i> Premium Quality</span>
+      </div>
+    </div>
+    <a class="mhero-scroll" href="#collections" aria-label="Scroll down"><span></span></a>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="blob" data-d="20" style="width:34vw;height:34vw;left:-6%;top:2%;background:var(--peach)"></div>
+    <div class="blob" data-d="-26" style="width:30vw;height:30vw;right:4%;bottom:-4%;background:var(--sage)"></div>
+    <div class="blob" data-d="16" style="width:22vw;height:22vw;right:24%;top:8%;background:var(--lav)"></div>
+
+    <div class="htext h-1" data-d="6"><span class="kick" style="font-size:1.9rem">made by hand ✿</span><div class="big">Handmade</div></div>
+    <div class="htext h-2" data-d="6"><div class="big">happy <em>homes.</em></div></div>
+    <svg class="squiggle" viewBox="0 0 360 30" data-d="4"><path d="M4 18 Q60 4 120 16 T240 16 T356 12" fill="none" stroke="#FF8A80" stroke-width="5" stroke-linecap="round"/></svg>
+    <p class="htext h-sub" data-d="10">Wooden rangoli, pearl art, toran &amp; florals — crafted by hand, made to be seen, styled to be shared.</p>
+    <div class="h-cta" data-d="12">
+      <a href="#collections" class="btn coral" id="cta1">Explore the studio →</a>
+      <a href="#process" class="btn ghost">Watch how it's made</a>
+    </div>
+
+    <div class="cards" id="cards">
+      <div class="pincard" data-d="40" style="left:60%;top:6%;transform:rotate(5deg)"><div class="tape"></div><div class="ph" style="background:var(--peach)"><img data-pimg="pk1" alt="Handmade peacock rangoli"><span class="price">₹850</span></div><div class="cap"><b>Peacock Rangoli</b><span class="like">♥</span></div></div>
+      <div class="pincard" data-d="-60" style="right:3%;top:30%;transform:rotate(-6deg)"><div class="pin"></div><div class="ph" style="background:var(--lav)"><img data-pimg="fr2" alt="Petal burst mandala rangoli"><span class="price">₹800</span></div><div class="cap"><b>Petal Mandala</b><span class="like">♥</span></div></div>
+      <div class="pincard" data-d="34" style="left:46%;bottom:4%;transform:rotate(3deg)"><div class="tape" style="background:rgba(168,195,160,.55)"></div><div class="ph" style="background:var(--sage)"><img data-pimg="df1" alt="Velvet hibiscus bloom"><span class="price">₹149</span></div><div class="cap"><b>Velvet Bloom</b><span class="like">♥</span></div></div>
+      <div class="pincard" data-d="-44" style="right:18%;bottom:8%;transform:rotate(-4deg)"><div class="pin"></div><div class="ph" style="background:var(--peach)"><img data-pimg="dl3" alt="Pearl diya pair"><span class="price">₹90</span></div><div class="cap"><b>Pearl Diyas</b><span class="like">♥</span></div></div>
+    </div>
+
+    <span class="h-tag hand" data-d="18" style="left:52%;top:1%;transform:rotate(-8deg)">made with love ♥</span>
+    <span class="h-tag hand" data-d="-14" style="right:8%;top:24%;transform:rotate(6deg);color:var(--coral)">@thecraftycorner</span>
+    <div class="scrolldown">scroll ↓</div>
+  </div>
+</section>
+
+<!-- Diwali cinematic overlay (fixed, transparent; drawn entirely on canvas) -->
+<canvas id="dwFx" aria-hidden="true"></canvas>
+
+<!-- Cloud wipe overlay (Ganpati theme only) — puffs + scroll animation built in JS -->
+<div id="cloudWipe" aria-hidden="true"><div class="cw-bank"><div class="cw-veil"></div></div></div>
+
+<!-- GANPATI CINEMATIC SECTION (Ganpati theme only) — particles form ॐ, then Ganpati Bappa -->
+<section class="gn-scene" id="gnScene" aria-label="Ganpati Bappa — a cinematic formed from light">
+  <canvas id="gnCanvas"></canvas>
+  <div class="gn-cap">॥ गणपती बाप्पा मोरया ॥</div>
+</section>
+
+<!-- COLLECTIONS -->
+<section class="sec-pad collsec" id="collections">
+  <div class="coll-bg" aria-hidden="true">
+    <span class="cblob cb1"></span><span class="cblob cb2"></span><span class="cblob cb3"></span><span class="cblob cb4"></span>
+    <svg class="cmandala cm1" viewBox="0 0 200 200">
+      <defs><path id="cpet" d="M100 100 C88 64 88 44 100 16 C112 44 112 64 100 100Z"/></defs>
+      <g fill="none" stroke="currentColor" stroke-width="1.4">
+        <circle cx="100" cy="100" r="20"/><circle cx="100" cy="100" r="46"/><circle cx="100" cy="100" r="74"/>
+        <use href="#cpet"/><use href="#cpet" transform="rotate(30 100 100)"/><use href="#cpet" transform="rotate(60 100 100)"/><use href="#cpet" transform="rotate(90 100 100)"/><use href="#cpet" transform="rotate(120 100 100)"/><use href="#cpet" transform="rotate(150 100 100)"/><use href="#cpet" transform="rotate(180 100 100)"/><use href="#cpet" transform="rotate(210 100 100)"/><use href="#cpet" transform="rotate(240 100 100)"/><use href="#cpet" transform="rotate(270 100 100)"/><use href="#cpet" transform="rotate(300 100 100)"/><use href="#cpet" transform="rotate(330 100 100)"/>
+      </g>
+    </svg>
+    <svg class="cmandala cm2" viewBox="0 0 200 200">
+      <g fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="100" cy="100" r="30"/><circle cx="100" cy="100" r="60"/><circle cx="100" cy="100" r="88"/>
+        <use href="#cpet" transform="rotate(15 100 100)"/><use href="#cpet" transform="rotate(60 100 100)"/><use href="#cpet" transform="rotate(105 100 100)"/><use href="#cpet" transform="rotate(150 100 100)"/><use href="#cpet" transform="rotate(195 100 100)"/><use href="#cpet" transform="rotate(240 100 100)"/><use href="#cpet" transform="rotate(285 100 100)"/><use href="#cpet" transform="rotate(330 100 100)"/>
+      </g>
+    </svg>
+  </div>
+  <div class="wrap">
+    <span class="kick rv">the good stuff ✦</span>
+    <h2 class="h2 rv">Shop by <em>vibe</em></h2>
+    <p class="lead rv">Six little obsessions, all handmade in small batches. Tap in.</p>
+    <div class="collgrid" id="collgrid"></div>
+  </div>
+</section>
+
+<!-- TRENDING -->
+<section class="sec-pad" id="trending" style="background:#fff6f0"><div class="wrap">
+  <span class="kick rv">on the moodboard ✰</span>
+  <h2 class="h2 rv">Trending in <em>real</em> homes</h2>
+  <p class="lead rv">Saved, styled and shared by people who love handmade.</p>
+  <div class="pinwall" id="board"></div>
+</div></section>
+
+<!-- ABOUT -->
+<section class="sec-pad" id="about"><div class="wrap">
+  <div class="about-grid">
+    <div class="about-media rv">
+      <span class="note hand">made with love ♥</span>
+      <div class="frame"><img data-pimg="pk1" alt="A handmade peacock rangoli by The Crafty Cornerr"></div>
+      <div class="mini"><img data-pimg="df1" alt="Handmade velvet bloom"></div>
+    </div>
+    <div class="about-copy">
+      <span class="kick rv">our story ✦</span>
+      <h2 class="h2 rv">Handmade, with a <em>whole lot of heart</em></h2>
+      <p class="rv">The Crafty Cornerr began at a kitchen table — a few skeins of wool, a pile of pearls, and a wish to make Indian homes a little warmer. What started as festive gifts for family quietly grew into a tiny studio crafting rangoli, toran and florals for homes all across the country.</p>
+      <p class="rv">Every piece is still made by hand, one at a time. No machines, no mass production — just slow, careful craft and colours chosen to make your corner feel unmistakably <em>yours</em>.</p>
+      <div class="about-stats rv">
+        <div><b>100%</b><span>handmade</span></div>
+        <div><b>2.5k+</b><span>happy homes</span></div>
+        <div><b>6</b><span>craft styles</span></div>
+      </div>
+      <a href="#collections" class="btn coral rv">Explore the studio →</a>
+    </div>
+  </div>
+</div></section>
+
+<!-- PROCESS -->
+<section class="sec-pad process" id="process"><div class="wrap">
+  <div style="text-align:center"><span class="kick rv">behind the scenes ✎</span><h2 class="h2 rv">From a sketch to <em>your shelf</em></h2></div>
+  <div class="steps" id="steps"></div>
+</div></section>
+
+<!-- TESTIMONIALS -->
+<section class="sec-pad loved"><div class="wrap">
+  <span class="kick rv">happy mail ♡</span>
+  <h2 class="h2 rv">People kinda <em>love</em> us</h2>
+  <div class="review-hwrap rv">
+    <div class="review-htrack" id="reviewTrack"></div>
+  </div>
+</div></section>
+
+<!-- OCCASIONS -->
+<section class="sec-pad occsec" id="gallery" style="background:#f6f2ff"><div class="wrap">
+  <div style="text-align:center">
+    <span class="kick rv">for every little celebration ✦</span>
+    <h2 class="h2 rv">Made for every <em>occasion</em></h2>
+    <p class="lead rv" style="margin:0 auto">From the first diya of Diwali to a quiet everyday corner — there's a handmade piece for the moment.</p>
+  </div>
+  <div class="occgrid" id="occgrid"></div>
+</div></section>
+
+<!-- CUSTOM -->
+<section class="sec-pad" id="custom"><div class="custom"><div class="inner">
+  <div class="rv">
+    <span class="kick">your idea, our hands ✦</span>
+    <h2 style="margin-top:.4rem">Dreaming up <em>something custom?</em></h2>
+    <p class="cl">Tell us the colours, the vibe and the corner it's for. We'll handcraft it just for you.</p>
+    <div class="hand" style="font-size:1.5rem;color:var(--peach)">usually replies within a day ✿</div>
+  </div>
+  <form class="cform rv" id="customForm">
+    <div class="two"><div class="cf"><label for="cfName">Your name</label><input id="cfName" name="name" placeholder="Aarohi" required></div><div class="cf"><label for="cfPhone">Phone</label><input id="cfPhone" name="phone" type="tel" placeholder="+91" required></div></div>
+    <div class="cf"><label for="cfEmail">Email</label><input id="cfEmail" name="email" type="email" placeholder="you@email.com" required></div>
+    <div class="cf"><label for="cfItem">What are you dreaming of?</label><select id="cfItem" name="item"><option>Wooden Rangoli</option><option>Pearl &amp; Stone Rangoli</option><option>Bandhanwar Toran</option><option>Decorative Flowers</option><option>Surprise me ✨</option></select></div>
+    <div class="cf"><label for="cfMsg">Tell us the vibe</label><textarea id="cfMsg" name="message" placeholder="Colours, size, occasion…" required></textarea></div>
+    <input type="checkbox" name="botcheck" class="cf-bot" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn coral" type="submit">Send my idea →</button>
+    <p class="cf-note" id="cfNote" role="status" aria-live="polite"></p>
+  </form>
+</div></div></section>
+
+<footer>
+  <!-- newsletter -->
+  <div class="foot-news"><div class="wrap">
+    <div>
+      <h3>Get 10% off your first order</h3>
+      <p>Join the list for new drops, festive collections and behind-the-scenes craft.</p>
+    </div>
+    <form class="foot-form" id="footNews">
+      <input type="email" placeholder="Your email address" aria-label="Email address" required>
+      <button type="submit" class="btn coral">Subscribe</button>
+    </form>
+  </div></div>
+
+  <!-- columns -->
+  <div class="foot-main"><div class="wrap"><div class="foot-grid">
+    <div class="foot-brand">
+      <img class="brandlogo foot-logo" alt="The Crafty Cornerr">
+      <p>Handmade Indian home décor — wooden rangoli, pearl art, toran &amp; florals. Made by hand, made to be seen.</p>
+      <div class="foot-trust">
+        <span>✦ Handmade in India</span>
+        <span>🚚 Pan-India shipping</span>
+        <span>✎ Custom orders</span>
+      </div>
+      <div class="socials">
+        <a href="https://www.instagram.com/the_crafty_cornerr/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg></a>
+        <a href="#" aria-label="Pinterest" title="Pinterest"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12.04 2.2c-5.46 0-8.2 3.67-8.2 6.73 0 1.85.74 3.5 2.32 4.12.26.1.49 0 .56-.28.05-.19.17-.66.22-.86.07-.27.04-.37-.16-.6-.44-.5-.72-1.16-.72-2.08 0-2.68 2.04-5.08 5.32-5.08 2.9 0 4.5 1.74 4.5 4.06 0 3.06-1.37 5.64-3.4 5.64-1.12 0-1.96-.92-1.69-2.05.32-1.36.95-2.82.95-3.8 0-.88-.48-1.6-1.46-1.6-1.16 0-2.1 1.18-2.1 2.76 0 1 .35 1.68.35 1.68l-1.4 5.86c-.42 1.74-.06 3.87-.03 4.08.02.13.18.16.26.06.1-.13 1.42-1.74 1.86-3.34.13-.45.74-2.86.74-2.86.36.68 1.42 1.28 2.55 1.28 3.36 0 5.64-3.04 5.64-7.1 0-3.08-2.62-5.93-6.6-5.93z"/></svg></a>
+        <a href="https://wa.me/917030924448?text=Hi%20The%20Crafty%20Cornerr!%20I'd%20like%20to%20know%20more%20about%20your%20handmade%20d%C3%A9cor." target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12.03 2.4c-5.3 0-9.6 4.3-9.6 9.6 0 1.7.45 3.34 1.3 4.8L2.4 21.6l4.94-1.3a9.56 9.56 0 0 0 4.68 1.2h.01c5.3 0 9.6-4.3 9.6-9.6 0-2.57-1-4.98-2.82-6.8a9.53 9.53 0 0 0-6.78-2.9zm0 1.6c2.13 0 4.13.83 5.64 2.34a7.93 7.93 0 0 1 2.34 5.64c0 4.4-3.58 7.98-8 7.98a7.96 7.96 0 0 1-4.06-1.11l-.29-.17-2.93.77.78-2.86-.19-.3a7.92 7.92 0 0 1-1.22-4.25c0-4.4 3.58-7.97 7.99-7.97zm-4.36 4.3c-.21 0-.55.08-.84.39-.29.31-1.1 1.08-1.1 2.63s1.13 3.05 1.29 3.26c.16.21 2.22 3.39 5.38 4.63 2.63 1.03 3.17.83 3.74.78.57-.05 1.84-.75 2.1-1.48.26-.73.26-1.35.18-1.48-.08-.13-.29-.21-.6-.37-.31-.16-1.84-.91-2.13-1.01-.29-.11-.5-.16-.71.16-.21.31-.81 1.01-1 1.22-.18.21-.37.24-.68.08-.31-.16-1.31-.48-2.5-1.54-.92-.82-1.54-1.84-1.72-2.15-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.55.16-.18.21-.31.31-.52.1-.21.05-.39-.03-.55-.08-.16-.69-1.7-.95-2.32-.25-.61-.5-.53-.69-.54-.18-.01-.39-.01-.6-.01z"/></svg></a>
+      </div>
+    </div>
+
+    <div class="foot-col">
+      <h4>Shop</h4>
+      <ul>
+        <li><a data-foot-cat="peacock">Peacock Designs</a></li>
+        <li><a data-foot-cat="floral">Floral Rangoli</a></li>
+        <li><a data-foot-cat="corner">Corner Rangoli</a></li>
+        <li><a data-foot-cat="border">Toran &amp; Borders</a></li>
+        <li><a data-foot-cat="diya">Diyas &amp; Lights</a></li>
+        <li><a data-foot-cat="flowers">Decorative Flowers</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h4>Explore</h4>
+      <ul>
+        <li><a href="#trending">Trending</a></li>
+        <li><a href="#process">How it's made</a></li>
+        <li><a href="#about">About us</a></li>
+        <li><a href="#gallery">Shop by occasion</a></li>
+        <li><a href="#custom">Custom order</a></li>
+        <li><a href="#top">Back to top</a></li>
+      </ul>
+    </div>
+
+    <div class="foot-col">
+      <h4>Help</h4>
+      <ul>
+        <li><a href="support.html">Support center</a></li>
+        <li><a href="support.html#faq">Shipping &amp; delivery</a></li>
+        <li><a href="support.html#exchange">Exchange policy</a></li>
+        <li><a href="support.html#faq">FAQs</a></li>
+        <li><a href="support.html#contact">Contact us</a></li>
+      </ul>
+    </div>
+  </div></div></div>
+
+  <!-- bottom bar -->
+  <div class="foot-bar"><div class="wrap">
+    <div class="fine">© 2026 The Crafty Cornerr — handmade in India ♥</div>
+    <div class="legal">
+      <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Refund policy</a>
+    </div>
+  </div></div>
+</footer>
+
+<!-- CART / FAVOURITES DRAWER -->
+<div class="drawer-back" id="drawerBack"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="Cart and favourites">
+  <div class="drawer-head">
+    <h3 id="drawerTitle"></h3>
+    <button class="x" id="drawerClose" aria-label="Close">×</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot" id="drawerFoot"></div>
+</aside>
+
+<!-- STICKY WHATSAPP BUTTON -->
+<a class="wa-fab" href="https://wa.me/917030924448?text=Hi%20The%20Crafty%20Cornerr!%20I'd%20like%20to%20know%20more%20about%20your%20handmade%20d%C3%A9cor." target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp" title="Chat on WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.03 2.4c-5.3 0-9.6 4.3-9.6 9.6 0 1.7.45 3.34 1.3 4.8L2.4 21.6l4.94-1.3a9.56 9.56 0 0 0 4.68 1.2h.01c5.3 0 9.6-4.3 9.6-9.6 0-2.57-1-4.98-2.82-6.8a9.53 9.53 0 0 0-6.78-2.9zm0 1.6c2.13 0 4.13.83 5.64 2.34a7.93 7.93 0 0 1 2.34 5.64c0 4.4-3.58 7.98-8 7.98a7.96 7.96 0 0 1-4.06-1.11l-.29-.17-2.93.77.78-2.86-.19-.3a7.92 7.92 0 0 1-1.22-4.25c0-4.4 3.58-7.97 7.99-7.97zm-4.36 4.3c-.21 0-.55.08-.84.39-.29.31-1.1 1.08-1.1 2.63s1.13 3.05 1.29 3.26c.16.21 2.22 3.39 5.38 4.63 2.63 1.03 3.17.83 3.74.78.57-.05 1.84-.75 2.1-1.48.26-.73.26-1.35.18-1.48-.08-.13-.29-.21-.6-.37-.31-.16-1.84-.91-2.13-1.01-.29-.11-.5-.16-.71.16-.21.31-.81 1.01-1 1.22-.18.21-.37.24-.68.08-.31-.16-1.31-.48-2.5-1.54-.92-.82-1.54-1.84-1.72-2.15-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.55.16-.18.21-.31.31-.52.1-.21.05-.39-.03-.55-.08-.16-.69-1.7-.95-2.32-.25-.61-.5-.53-.69-.54-.18-.01-.39-.01-.6-.01z"/></svg>
+</a>
+
+<!-- SHOP OVERLAY -->
+<div class="shop-ov" id="shopOv" aria-hidden="true">
+  <div class="ov-head">
+    <button class="ov-back" id="ovBack">← Back</button>
+    <div class="ov-title" id="ovTitle"></div>
+    <button class="ov-close" id="ovClose" aria-label="Close">×</button>
+  </div>
+  <div class="ov-body">
+    <div class="cat-bg" id="catBg" aria-hidden="true">
+      <span class="cb cb1"></span>
+      <span class="cb cb2"></span>
+      <span class="cb cb3"></span>
+      <span class="swirl"></span>
+    </div>
+    <div class="cat-view" id="catView"></div>
+    <div class="pdp-view" id="pdpView"></div>
+  </div>
+</div>
+
+<script>
+/* ===== motifs ===== */
+const G='#D4B483',GD='#B0894F',T='#C77B5A',CO='#FF8A80',CH='#222';
+function petalRing(cx,cy,rIn,rOut,n,fill,stroke){let s='';for(let i=0;i<n;i++){const a=i*2*Math.PI/n;const x1=cx+rIn*Math.cos(a),y1=cy+rIn*Math.sin(a),x2=cx+rOut*Math.cos(a),y2=cy+rOut*Math.sin(a);const w=(rOut-rIn)*.42;const ax=cx+(rIn+rOut)/2*Math.cos(a)-w*Math.sin(a),ay=cy+(rIn+rOut)/2*Math.sin(a)+w*Math.cos(a);const bx=cx+(rIn+rOut)/2*Math.cos(a)+w*Math.sin(a),by=cy+(rIn+rOut)/2*Math.sin(a)-w*Math.cos(a);s+=`<path d="M${x1} ${y1} Q${ax} ${ay} ${x2} ${y2} Q${bx} ${by} ${x1} ${y1}Z" fill="${fill||'none'}" stroke="${stroke||'none'}" stroke-width="1.4"/>`;}return s;}
+function dotRing(cx,cy,r,n,rad,fill){let s='';for(let i=0;i<n;i++){const a=i*2*Math.PI/n;s+=`<circle cx="${(cx+r*Math.cos(a)).toFixed(1)}" cy="${(cy+r*Math.sin(a)).toFixed(1)}" r="${rad}" fill="${fill}"/>`;}return s;}
+function mark(st){return `<circle cx="20" cy="20" r="18" fill="none" stroke="${st}" stroke-width="2"/>${petalRing(20,20,5,13,8,'none',st)}<circle cx="20" cy="20" r="3" fill="${st}"/>`;}
+const ART={
+ wood:u=>`<svg viewBox="0 0 300 300"><defs><radialGradient id="wg${u}" cx="42%" cy="36%"><stop offset="0%" stop-color="#c08c47"/><stop offset="100%" stop-color="#7a5226"/></radialGradient></defs><circle cx="150" cy="150" r="140" fill="url(#wg${u})"/>${petalRing(150,150,44,130,12,'rgba(255,240,210,.12)','#f0d6a8')}${petalRing(150,150,28,92,12,'rgba(255,240,210,.16)','#f6e0b6')}${dotRing(150,150,112,24,3,'#f6e0b6')}<circle cx="150" cy="150" r="20" fill="#d3ab6e"/></svg>`,
+ pearl:()=>`<svg viewBox="0 0 300 300"><circle cx="150" cy="150" r="138" fill="none" stroke="#fff" stroke-width="1.5"/>${[120,95,70,45].map((r,i)=>dotRing(150,150,r,32-i*6,5-i*.4,'#fff')).join('')}${petalRing(150,150,20,40,8,'none','#fff')}<circle cx="150" cy="150" r="9" fill="#fff"/></svg>`,
+ toran:()=>{let l='';for(let i=0;i<6;i++){const x=42+i*43,d=18+Math.sin(i*1.2)*8;l+=`<path d="M${x} 70 q-13 ${26+d} 0 ${52+d} q13 -${26+d} 0 -${52+d}Z" fill="#5f7d4b" opacity="${.78+(i%2)*.18}"/><circle cx="${x}" cy="${126+d}" r="6" fill="${CO}"/>`;}return `<svg viewBox="0 0 300 240"><path d="M22 64 Q150 38 278 64" fill="none" stroke="#3f5a30" stroke-width="3"/><g>${l}</g></svg>`;},
+ flowers:()=>{let f='';const c=['#FF8A80','#ff6f61','#ffb59e','#ff9e7a','#ff857c'],p=[[92,92],[170,82],[228,122],[120,162],[200,182]];p.forEach((q,k)=>{f+=petalRing(q[0],q[1],8,30,10,c[k%c.length],'none');f+=`<circle cx="${q[0]}" cy="${q[1]}" r="8" fill="#fff3ec"/>`;});return `<svg viewBox="0 0 300 280"><g>${f}</g><path d="M70 232 Q160 200 250 234" stroke="#5f7d4b" stroke-width="3" fill="none"/></svg>`;}
+};
+const LOGO='logo.png?v=1';
+const NAV_LOGO='logo.png?v=1';
+document.querySelectorAll('.foot-logo').forEach(i=>i.src=LOGO);
+/* footer Shop links open the category overlay */
+document.querySelectorAll('[data-foot-cat]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();openCategory(a.dataset.footCat);}));
+/* footer newsletter */
+(function(){const f=document.getElementById('footNews');if(f)f.addEventListener('submit',e=>{e.preventDefault();f.reset();toast('Thanks for subscribing ♥');});})();
+
+/* ===== Custom order enquiry -> Web3Forms (emails the studio; no backend needed).
+   PASTE YOUR ACCESS KEY BELOW — get it free at https://web3forms.com (enter the
+   inbox address, they email you a key). It is a public, submit-only key, so it is
+   safe to ship in this file. Until it is set, the form tells the visitor to
+   WhatsApp instead rather than silently swallowing their enquiry. ===== */
+const WEB3FORMS_KEY='9e419d23-7cc6-4351-9c2a-a32b46872250';
+(function(){
+  const f=document.getElementById('customForm');if(!f)return;
+  const btn=f.querySelector('button[type=submit]'),note=document.getElementById('cfNote');
+  const label=btn.textContent,WA='https://wa.me/917030924448';
+  const fail=m=>{note.className='cf-note err';note.innerHTML=m+' — or <a href="'+WA+'" target="_blank" rel="noopener">WhatsApp us</a>.';btn.disabled=false;btn.textContent=label;};
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();
+    if(f.botcheck&&f.botcheck.checked)return;                 // bot filled the hidden field
+    if(!f.reportValidity())return;
+    if(!WEB3FORMS_KEY||WEB3FORMS_KEY.startsWith('PASTE-')){fail('The enquiry form isn’t connected yet');return;}
+    btn.disabled=true;btn.textContent='Sending…';note.className='cf-note';note.textContent='';
+    try{
+      const fd=new FormData(f);
+      fd.append('access_key',WEB3FORMS_KEY);
+      fd.append('subject','New custom order enquiry — The Crafty Cornerr');
+      fd.append('from_name','The Crafty Cornerr website');
+      const r=await fetch('https://api.web3forms.com/submit',{method:'POST',body:fd});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok||!d.success)throw new Error(d.message||'send failed');
+      f.reset();btn.textContent='Sent! we’ll be in touch ♥';
+      note.className='cf-note';note.textContent='Thank you — we usually reply within a day.';
+      toast('Enquiry sent ♥');
+    }catch(err){console.warn('[TCC] custom enquiry failed',err);fail('Could not send just now');}
+  });
+})();
+document.querySelectorAll('#mobile .brandlogo').forEach(i=>i.src=NAV_LOGO);
+document.querySelectorAll('.nav-brand').forEach(i=>i.src=NAV_LOGO);
+document.querySelectorAll('[data-art]').forEach((el,i)=>{const k=el.dataset.art;el.innerHTML=ART[k]?ART[k](i):'';});
+
+/* ===== Sanity CMS — the client edits products & prices in Sanity Studio.
+   Set projectId below to your Sanity project id (from sanity.io/manage).
+   Until it is set, the built-in starter products below are shown. ===== */
+/* token: a READ-ONLY ("Viewer") token, from sanity.io/manage -> API -> Tokens.
+   It only lets the site READ the catalogue (same data shown on the page), never
+   write. Needed because new Sanity datasets keep documents private by default. */
+const SANITY={projectId:'c8746siu',dataset:'production',apiVersion:'2024-01-01',token:'skBqdloBdBlNaoavA58MDcPn94t8wuPsnpKV5TQbciVeFDXQ40aIAsOaPhCJzZ1SQdhKougXwOTDD8vavKYxdP3dw1UGiC19jEwl4WnstKBRqENbklyAVS62cVtFdbmz0DZ3oZ6wTuIoemvAd9r3qbwbOSsejox2nRsXweilweHqKDd2vboW'};
+const sanityOn=()=>SANITY.projectId&&SANITY.projectId!=='YOUR_PROJECT_ID';
+async function loadSanity(){
+  if(!sanityOn())return null;
+  const rev='reviews[]{"n":name,"loc":location,"r":rating,"t":text} + *[_type=="review" && approved==true && references(^._id)]|order(submittedAt desc){"n":name,"loc":location,"r":rating,"t":text}';
+  const q=`{"categories":*[_type=="category"]|order(order asc){"key":key,title,tagline,"cover":coverImage.asset->url,"products":*[_type=="product"&&references(^._id)]|order(order asc){"id":code,name,price,"old":oldPrice,badge,rating,"rc":reviewCount,"img":image.asset->url,"desc":description,specs,"reviews":${rev}}},"settings":*[_id=="siteSettings"][0]{theme,"heroBg":heroBackground.asset->url,"hero":heroProducts[]->{"img":image.asset->url,name,price,"id":code}}}`;
+  const url=`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}/data/query/${SANITY.dataset}?query=${encodeURIComponent(q)}`;
+  const r=await fetch(url, SANITY.token?{headers:{Authorization:'Bearer '+SANITY.token}}:undefined);
+  if(!r.ok)throw new Error('Sanity HTTP '+r.status);
+  const {result}=await r.json();
+  const cats=result&&result.categories;
+  if(!cats||!cats.length)return null;
+  const C={},P={},V={};
+  cats.forEach(cat=>{ if(!cat.key)return;
+    const products=(cat.products||[]).map(p=>{ const img=p.img||'';   // clean base URL; each render site sizes it via imgW()
+      if(p.id&&img)P[p.id]=img;
+      return {id:p.id,name:p.name,price:p.price,old:p.old||null,badge:p.badge||null,rating:p.rating||0,rc:p.rc||0,img,desc:p.desc||'',specs:(p.specs||[]).map(s=>[s.label,s.value]),reviews:p.reviews||[]};
+    });
+    C[cat.key]={title:cat.title,ek:cat.tagline||'',products};
+    V[cat.key]=imgW(cat.cover||(products[0]&&products[0].img)||'',800);
+  });
+  return {CATALOG:C,PIMG:P,COVER:V,SETTINGS:(result&&result.settings)||{}};
+}
+function fillPImages(){document.querySelectorAll('[data-pimg]').forEach(img=>{const k=img.dataset.pimg;if(PIMG[k])img.src=imgW(PIMG[k],700);});}
+/* Hero cards + mobile background come from Site Settings (client-picked in Sanity).
+   Falls back to the built-in data-pimg images when Site Settings is empty. */
+function renderHero(){
+  const bg=SETTINGS&&SETTINGS.heroBg, hero=(SETTINGS&&SETTINGS.hero)||[];
+  if(bg){const m=document.querySelector('.mhero-bg');if(m)m.src=bg+'?w=1200&auto=format';}
+  if(hero.length)document.querySelectorAll('#cards .pincard').forEach((card,i)=>{const h=hero[i];if(!h)return;
+    const im=card.querySelector('img');if(im&&h.img)im.src=h.img+'?w=520&auto=format';
+    const pr=card.querySelector('.price');if(pr&&h.price!=null)pr.textContent='₹'+Number(h.price).toLocaleString('en-IN');
+    const nm=card.querySelector('.cap b');if(nm&&h.name)nm.textContent=h.name;});
+}
+/* Apply the client-selected site theme (e.g. Diwali) by setting data-theme on <html>. */
+/* Sanity's siteSettings.theme drives the whole site (?theme= only overrides it for previewing).
+   The resolved theme is cached so the next load paints it before Sanity even responds. */
+function applyTheme(){
+  const urlT=new URLSearchParams(location.search).get('theme');
+  const cms=(SETTINGS&&SETTINGS.theme)||null;
+  const t=urlT||cms||'default';
+  const el=document.documentElement;
+  if(t&&t!=='default')el.setAttribute('data-theme',t); else el.removeAttribute('data-theme');
+  if(!urlT&&cms){try{localStorage.setItem('tcc.theme',cms);}catch(e){}}   // remember what the CMS said
+  document.dispatchEvent(new CustomEvent('themechange',{detail:t}));
+}
+/* (Re)render every section that shows product imagery. Called once after the
+   catalogue is ready (Sanity or built-in) so images are never missing. */
+function renderAll(){renderCollections();renderBoard();renderOccasions();fillPImages();renderHero();applyTheme();if(typeof syncHearts==='function')syncHearts();}
+/* Reveal animations only track elements present when GSAP set them up. Anything
+   rendered afterwards (Sanity path) must be forced visible or it stays hidden. */
+function revealSections(){if(!window.__revealReady)return;document.querySelectorAll('#collgrid .rv,#board .rv,#occgrid .rv').forEach(e=>{e.style.opacity=1;e.style.transform='none';e.style.clipPath='none';});}
+function bootCatalog(){
+  if(!sanityOn()){renderAll();return;}          // no CMS configured -> built-in, renders before GSAP so reveals animate
+  loadSanity()
+    .then(d=>{if(d){CATALOG=d.CATALOG;PIMG=d.PIMG;COVER=d.COVER;SETTINGS=d.SETTINGS||{};}})
+    .catch(e=>console.warn('[TCC] Sanity load failed — showing built-in products.',e))
+    .finally(()=>{renderAll();revealSections();if(window.ScrollTrigger)ScrollTrigger.refresh();});
+}
+/* ===== data (built-in starter products; Sanity overrides these when configured) ===== */
+let PIMG={}, COVER={}, SETTINGS={};
+document.querySelectorAll('[data-pimg]').forEach(img=>{const k=img.dataset.pimg;if(PIMG[k])img.src=imgW(PIMG[k],700);});
+const collections=[
+ {id:'peacock',t:'Peacock Designs',h:'regal & bold',img:''},
+ {id:'floral',t:'Floral Rangoli',h:'the centrepiece',img:''},
+ {id:'corner',t:'Corner Rangoli',h:'fill the corners',img:''},
+ {id:'border',t:'Toran & Borders',h:'doorway glow-up',img:''},
+ {id:'diya',t:'Diyas & Lights',h:'festive flames',img:''},
+ {id:'flowers',t:'Decorative Flowers',h:'always in bloom',img:''},
+];
+const GLOW={peacock:'rgba(56,128,150,.6)',floral:'rgba(255,138,128,.6)',corner:'rgba(240,150,70,.6)',border:'rgba(199,184,234,.62)',diya:'rgba(225,70,100,.58)',flowers:'rgba(255,118,108,.6)'};
+function renderCollections(){document.getElementById('collgrid').innerHTML=collections.map(c=>`
+ <div class="collcard rv" data-cat="${c.id}" style="--glow:${GLOW[c.id]||'rgba(34,34,34,.45)'}">
+   <div class="cinner">
+     <img class="cimg" src="${COVER[c.id]||''}" alt="${c.t}" loading="lazy">
+     <div class="veil"></div>
+     <div class="save">Shop now →</div>
+     <div class="cmeta"><div class="t">${(CATALOG[c.id]&&CATALOG[c.id].title)||c.t}</div><div class="h">${c.h}</div></div>
+     <div class="ring"></div>
+   </div>
+ </div>`).join('');
+document.querySelectorAll('.collcard[data-cat]').forEach(c=>c.addEventListener('click',()=>openCategory(c.dataset.cat)));}
+
+/* ===== SHOP: category list + product detail ===== */
+const palette=['var(--peach)','var(--lav)','var(--sage)','#ffe0d2','#f3eaff'];
+/* Size a Sanity image URL for the slot it goes in — appends an on-the-fly resize
+   (+ WebP/auto-format) so an 80px thumbnail never downloads a 900px photo, and a
+   client's full-res phone upload never streams at full size. No-op on empty URLs. */
+function imgW(url,w){return url?url+(url.indexOf('?')<0?'?':'&')+'w='+w+'&auto=format':'';}
+function priceFmt(n){return '₹'+n.toLocaleString('en-IN');}
+function starHTML(r){let s='';for(let i=1;i<=5;i++){s+=i<=Math.round(r)?'★':'<span class="e">★</span>';}return s;}
+/* Average rating + count derived from a product's actual reviews (seed + approved).
+   Falls back to the CMS rating/reviewCount only when a product has no reviews yet. */
+function reviewStats(p){
+  const revs=(p.reviews||[]).filter(rv=>rv&&Number(rv.r)>0);
+  if(!revs.length)return {avg:Number(p.rating)||0,count:(p.reviews||[]).length||Number(p.rc)||0};
+  const avg=revs.reduce((s,rv)=>s+Number(rv.r),0)/revs.length;
+  return {avg:Math.round(avg*10)/10,count:(p.reviews||[]).length};
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function revCardHTML(rv){return `<div class="rev"><div class="top"><div class="av">${esc((rv.n||'?')[0])}</div><div><div class="nm">${esc(rv.n)}${rv.you?'<span class="you">You</span>':''}${rv.pending?'<span class="you" style="background:#e8b04b">Pending approval</span>':''}</div><div class="loc">${esc(rv.loc)}</div></div></div><div class="stars" style="margin-bottom:.5rem">${starHTML(rv.r)}</div><p>${esc(rv.t)}</p></div>`;}
+
+let CATALOG={
+ peacock:{title:'Peacock Designs',ek:'regal & bold ✦',products:[
+   {id:'pk1',name:'Peacock Rangoli',price:850,old:null,badge:'Bestseller',rating:4.9,rc:142,img:'',
+    desc:'A regal peacock fanning its tail in vibrant hand-tufted wool — a true showstopper for festive floors and entrances.',
+    specs:[['Sizes','2×2 ft ₹850 · 2.5×2.5 ft ₹1000'],['Material','Hand-tufted wool'],['Type','Floor rangoli'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Aarohi M.',loc:'Mumbai',r:5,t:'Absolute showstopper at our Diwali — guests could not stop staring.'},{n:'Devang S.',loc:'Ahmedabad',r:5,t:'The colours and detail are stunning in person.'}]},
+   {id:'pk2',name:'Peacock Mandala Rangoli',price:800,old:null,badge:null,rating:4.8,rc:96,img:'',
+    desc:'A peacock framed inside a bright circular mandala of wool — bold colour for doorways and living-room floors.',
+    specs:[['Size','2×2 ft'],['Material','Hand-tufted wool'],['Type','Floor rangoli'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Rohit V.',loc:'Pune',r:5,t:'So vivid and well made. Looks designer.'},{n:'Sneha K.',loc:'Delhi',r:4,t:'Lovely centrepiece, great quality wool.'}]},
+   {id:'pk3',name:'Peacock Feather Art',price:800,old:null,badge:null,rating:4.8,rc:67,img:'',
+    desc:'A lush peacock feather with a flute motif, hand-tufted in greens and golds — a graceful wall or floor accent.',
+    specs:[['Size','2×2 ft'],['Material','Hand-tufted wool'],['Type','Wall / floor art'],['Care','Dust gently'],['Origin','Handmade in India']],
+    reviews:[{n:'Priya N.',loc:'Kochi',r:5,t:'Gorgeous on my wall, everyone asks about it.'},{n:'Imran S.',loc:'Hyderabad',r:4,t:'Beautiful craft, well packed.'}]},
+ ]},
+ floral:{title:'Floral Rangoli',ek:'the centrepiece ✦',products:[
+   {id:'fr1',name:'Star Bloom Rangoli',price:800,old:null,badge:null,rating:4.7,rc:110,img:'',
+    desc:'A striking star-bloom mandala in festive reds and greens, hand-tufted in soft wool.',
+    specs:[['Sizes','2×2 ft ₹800 · 3×3 ft ₹950'],['Material','Hand-tufted wool'],['Type','Floor rangoli'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Meera R.',loc:'Jaipur',r:5,t:'Brightens up the whole entrance.'},{n:'Karan D.',loc:'Surat',r:4,t:'Rich colours, good size.'}]},
+   {id:'fr2',name:'Petal Burst Mandala',price:800,old:null,badge:'Bestseller',rating:4.9,rc:138,img:'',
+    desc:'Layered pink petals around a sunlit core — a cheerful centrepiece that lifts any room.',
+    specs:[['Sizes','2×2 ft ₹800 · 3×3 ft ₹1000'],['Material','Hand-tufted wool'],['Type','Floor rangoli'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Aarohi M.',loc:'Mumbai',r:5,t:'My favourite piece, the petals look so soft.'},{n:'Nisha P.',loc:'Chennai',r:5,t:'Even prettier than the photos.'}]},
+   {id:'fr3',name:'Sunflower Rangoli',price:300,old:null,badge:'New',rating:4.6,rc:84,img:'',
+    desc:'A bright sunflower ringed with green leaves — a compact rangoli for corners and tabletops.',
+    specs:[['Size','17 × 17 inches'],['Material','Hand-tufted wool'],['Type','Compact rangoli'],['Care','Dust gently'],['Origin','Handmade in India']],
+    reviews:[{n:'Aisha B.',loc:'Lucknow',r:5,t:'Adorable and affordable.'},{n:'Priya N.',loc:'Kochi',r:4,t:'Perfect little accent.'}]},
+   {id:'fr4',name:'Royal Bloom Mandala',price:750,old:null,badge:null,rating:4.8,rc:59,img:'',
+    desc:'A regal mandala with a magenta heart and golden rays — understated festive elegance.',
+    specs:[['Size','2×2 ft'],['Material','Hand-tufted wool'],['Type','Floor rangoli'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Sneha K.',loc:'Delhi',r:5,t:'Elegant and beautifully finished.'},{n:'Rohit V.',loc:'Pune',r:5,t:'Sturdy and vibrant.'}]},
+ ]},
+ corner:{title:'Corner Rangoli',ek:'fill the corners ✦',products:[
+   {id:'cr1',name:'Elegant Corner Rangoli',price:800,old:null,badge:null,rating:4.8,rc:73,img:'',
+    desc:'Elegant corners, crafted with colourful wool magic — fills empty corners with festive bloom.',
+    specs:[['Sizes','2×2 ft ₹800 · 3×3 ft ₹1100'],['Material','Hand-tufted wool'],['Type','Corner piece'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Devang S.',loc:'Ahmedabad',r:5,t:'Fits my corner perfectly, lovely work.'},{n:'Meera R.',loc:'Jaipur',r:4,t:'Great colours.'}]},
+   {id:'cr2',name:'Lotus Corner Rangoli',price:650,old:null,badge:'Bestseller',rating:4.7,rc:91,img:'',
+    desc:'A blooming pink lotus half-circle — the perfect corner piece for doorways and balconies.',
+    specs:[['Size','2 × 1.5 ft'],['Material','Hand-tufted wool'],['Type','Corner piece'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Nisha P.',loc:'Chennai',r:5,t:'The lotus looks so real and soft.'},{n:'Aarohi M.',loc:'Mumbai',r:4,t:'Beautiful by the doorway.'}]},
+   {id:'cr3',name:'Petite Corner Accent',price:650,old:null,badge:null,rating:4.6,rc:48,img:'',
+    desc:'A petite lotus-and-sunflower corner accent for shelves, side tables and cosy nooks.',
+    specs:[['Size','Small corner'],['Material','Hand-tufted wool'],['Type','Corner accent'],['Care','Dust gently'],['Origin','Handmade in India']],
+    reviews:[{n:'Aisha B.',loc:'Lucknow',r:5,t:'So cute on my shelf.'},{n:'Karan D.',loc:'Surat',r:4,t:'Nice little piece.'}]},
+   {id:'cr4',name:'Lotus Half-Circle Rangoli',price:700,old:null,badge:null,rating:4.8,rc:54,img:'',
+    desc:'A grand half-circle lotus rangoli with sunrise rays — a bold corner or doorstep centrepiece.',
+    specs:[['Size','Half-circle, ~2 ft wide'],['Material','Hand-tufted wool'],['Type','Corner / doorstep'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Meera R.',loc:'Jaipur',r:5,t:'Stunning at my entrance.'},{n:'Nisha P.',loc:'Chennai',r:5,t:'The colours pop beautifully.'}]},
+ ]},
+ border:{title:'Toran & Borders',ek:'doorway glow-up ✦',products:[
+   {id:'tb1',name:'Blossom Border Strip',price:450,old:null,badge:null,rating:4.6,rc:52,img:'',
+    desc:'A delicate pink-bloom border to frame doorways, mirrors and pooja spaces.',
+    specs:[['Size','4 in × 3 ft (rectangular)'],['Material','Hand-tufted wool'],['Type','Border / toran'],['Care','Dust gently'],['Origin','Handmade in India']],
+    reviews:[{n:'Priya N.',loc:'Kochi',r:5,t:'Frames my mirror beautifully.'},{n:'Rohit V.',loc:'Pune',r:4,t:'Pretty and well made.'}]},
+   {id:'tb2',name:'Marigold Border',price:650,old:null,badge:'New',rating:4.8,rc:70,img:'',
+    desc:'A cheerful marigold-and-leaf border strip to dress up entrances and table edges.',
+    specs:[['Size','1 ft × 3 ft'],['Material','Hand-tufted wool'],['Type','Border / toran'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Sneha K.',loc:'Delhi',r:5,t:'Adds such a warm welcome at the door.'},{n:'Meera R.',loc:'Jaipur',r:5,t:'Lovely marigold colour.'}]},
+   {id:'tb3',name:'Floral Vine Border',price:550,old:null,badge:null,rating:4.6,rc:44,img:'',
+    desc:'A flowing vine border of leaves and blossoms in wool — frames doorways, mandaps and rangoli edges.',
+    specs:[['Size','~3 ft long'],['Material','Hand-tufted wool'],['Type','Border'],['Care','Dust gently'],['Origin','Handmade in India']],
+    reviews:[{n:'Karan D.',loc:'Surat',r:5,t:'Beautiful flowing design.'},{n:'Aisha B.',loc:'Lucknow',r:4,t:'Great for the doorway.'}]},
+   {id:'tb4',name:'Lotus Scroll Border',price:650,old:null,badge:null,rating:4.7,rc:51,img:'',
+    desc:'A regal lotus-and-scroll border in maroon, pink and gold — an elegant frame for any entrance.',
+    specs:[['Size','~3 ft long'],['Material','Hand-tufted wool'],['Type','Border'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Priya N.',loc:'Kochi',r:5,t:'The lotus detail is gorgeous.'},{n:'Rohit V.',loc:'Pune',r:4,t:'Rich, festive look.'}]},
+   {id:'tb5',name:'Lotus Row Border',price:750,old:null,badge:'Bestseller',rating:4.8,rc:78,img:'',
+    desc:'A row of bright orange lotuses on a cream-and-maroon base — a striking border for festive floors.',
+    specs:[['Size','~3 ft long'],['Material','Hand-tufted wool'],['Type','Border'],['Care','Spot clean only'],['Origin','Handmade in India']],
+    reviews:[{n:'Aarohi M.',loc:'Mumbai',r:5,t:'So vibrant, loved it for Diwali.'},{n:'Devang S.',loc:'Ahmedabad',r:5,t:'Lovely lotus row.'}]},
+   {id:'bt1',name:'Royal Marigold Bandhanwar',price:1499,old:1899,badge:'Bestseller',rating:4.9,rc:96,img:'',
+    desc:'A festive doorway bandhanwar with mirror-work florals, a shubh swastik centre and green tassels, finished with marigold side hangings.',
+    specs:[['Width','Fits standard doorways'],['Material','Fabric, mirror & bead work'],['Includes','Toran + 2 side hangings'],['Care','Spot clean'],['Origin','Handmade in India']],
+    reviews:[{n:'Sneha K.',loc:'Delhi',r:5,t:'Transformed our entrance for Diwali.'},{n:'Nisha P.',loc:'Chennai',r:5,t:'Looks even richer in person.'}]},
+   {id:'bt3',name:'Shubh Labh Pearl Toran',price:2299,old:null,badge:null,rating:4.8,rc:62,img:'',
+    desc:'A premium bandhanwar with Shubh-Labh medallions, a deity centrepiece, gold florals and cascading pearl-and-bead hangings.',
+    specs:[['Width','Fits standard doorways'],['Material','Beadwork, pearls, zari'],['Includes','Toran + 2 pearl side drops'],['Care','Dust gently'],['Origin','Handmade in India']],
+    reviews:[{n:'Imran S.',loc:'Hyderabad',r:5,t:'Feels truly premium and auspicious.'},{n:'Meera R.',loc:'Jaipur',r:4,t:'Beautiful pearl detailing.'}]},
+ ]},
+ diya:{title:'Diyas & Lights',ek:'festive flames ✦',products:[
+   {id:'dl1',name:'Petal Diya Set',price:180,old:null,badge:null,rating:4.7,rc:64,img:'',
+    desc:'Hand-tufted petal diya holders that cradle a tealight in a warm glow of colour.',
+    specs:[['Size','12 inches'],['Price','₹180 per piece'],['Material','Wool & tealight holder'],['Care','Keep flame clear of wool'],['Origin','Handmade in India']],
+    reviews:[{n:'Imran S.',loc:'Hyderabad',r:5,t:'Looks magical lit up at night.'},{n:'Aisha B.',loc:'Lucknow',r:4,t:'Pretty for the festive table.'}]},
+   {id:'dl2',name:'Brass Diya Collection',price:60,old:null,badge:null,rating:4.6,rc:41,img:'',
+    desc:'A curated set of decorative brass-tone diyas — singles and jodis for every festive corner.',
+    specs:[['Price','From ₹60/pc · jodi from ₹120'],['Material','Brass-tone metal'],['Type','Decorative diyas'],['Care','Wipe clean'],['Origin','Handmade in India']],
+    reviews:[{n:'Karan D.',loc:'Surat',r:5,t:'Great value set, looks rich.'},{n:'Devang S.',loc:'Ahmedabad',r:4,t:'Nice finish on the diyas.'}]},
+   {id:'dl3',name:'Pearl Diya Pair',price:90,old:null,badge:'Loved',rating:4.9,rc:88,img:'',
+    desc:'Rich red diyas rimmed with pearls — a dainty pair to light up Diwali and pujas.',
+    specs:[['Price','₹90 per pair'],['Material','Terracotta & pearl trim'],['Type','Decorative diyas'],['Care','Wipe gently'],['Origin','Handmade in India']],
+    reviews:[{n:'Aarohi M.',loc:'Mumbai',r:5,t:'So dainty and pretty, loved them.'},{n:'Nisha P.',loc:'Chennai',r:5,t:'Perfect little Diwali gift.'}]},
+ ]},
+ flowers:{title:'Decorative Flowers',ek:'always in bloom ✦',products:[
+   {id:'df1',name:'Velvet Hibiscus Bloom',price:149,old:null,badge:'New',rating:4.7,rc:38,img:'',
+    desc:'A plush hand-tufted hibiscus bloom in deep velvet red — style it on trays, garlands, pooja thalis or gift wraps.',
+    specs:[['Size','~7 inches across'],['Material','Hand-tufted wool / chenille'],['Type','Decorative flower'],['Colours','Made to order'],['Origin','Handmade in India']],
+    reviews:[{n:'Priya N.',loc:'Kochi',r:5,t:'So lifelike and soft, loved it.'},{n:'Aisha B.',loc:'Lucknow',r:4,t:'Brightens up my pooja thali.'}]},
+ ]},
+};
+
+let _uid=900;
+const shopOv=document.getElementById('shopOv');
+const ovTitle=document.getElementById('ovTitle');
+const catView=document.getElementById('catView');
+const pdpView=document.getElementById('pdpView');
+
+function lockScroll(on){if(window.lenis){on?lenis.stop():lenis.start();}document.documentElement.style.overflow=on?'hidden':'';}
+
+const CATBG={peacock:'#7ec5d6',floral:'var(--coral)',corner:'#f3b15e',border:'var(--lav)',diya:'#e87a93',flowers:'#ff8f86'};
+
+/* ===== Phase 1: persistent cart & favourites (localStorage) ===== */
+function findProd(key,id){const c=CATALOG[key];return c?c.products.find(p=>p.id===id):null;}
+const Store=(function(){
+  const CK='tcc.cart', FK='tcc.fav';
+  let cart={}, fav=[];
+  try{const c=JSON.parse(localStorage.getItem(CK));if(c&&typeof c==='object'&&!Array.isArray(c))cart=c;}catch(e){}
+  try{const f=JSON.parse(localStorage.getItem(FK));if(Array.isArray(f))fav=f;}catch(e){}
+  const subs=[];
+  const uid=(k,i)=>k+':'+i;
+  function save(){try{localStorage.setItem(CK,JSON.stringify(cart));localStorage.setItem(FK,JSON.stringify(fav));}catch(e){}}
+  function emit(){save();subs.forEach(f=>f());}
+  function parse(k){const i=k.indexOf(':');return{key:k.slice(0,i),id:k.slice(i+1)};}
+  return {
+    onChange(f){subs.push(f);},
+    cartItems(){return Object.keys(cart).map(k=>({...parse(k),qty:cart[k]})).filter(x=>findProd(x.key,x.id));},
+    favItems(){return fav.map(parse).filter(x=>findProd(x.key,x.id));},
+    cartCount(){return Object.values(cart).reduce((a,b)=>a+b,0);},
+    favCount(){return fav.length;},
+    isFav(k,i){return fav.indexOf(uid(k,i))>-1;},
+    add(k,i,n){const u=uid(k,i);cart[u]=(cart[u]||0)+(n||1);if(cart[u]<1)delete cart[u];emit();},
+    remove(k,i){delete cart[uid(k,i)];emit();},
+    toggleFav(k,i){const u=uid(k,i),x=fav.indexOf(u);if(x>-1)fav.splice(x,1);else fav.push(u);emit();return x<0;},
+    removeFav(k,i){const x=fav.indexOf(uid(k,i));if(x>-1){fav.splice(x,1);emit();}},
+    subtotal(){return this.cartItems().reduce((a,x)=>{const p=findProd(x.key,x.id);return a+(p?p.price*x.qty:0);},0);}
+  };
+})();
+
+/* customer-submitted reviews (localStorage) */
+const Reviews=(function(){
+  const K='tcc.reviews';let all={};
+  try{const r=JSON.parse(localStorage.getItem(K));if(r&&typeof r==='object'&&!Array.isArray(r))all=r;}catch(e){}
+  const uid=(k,i)=>k+':'+i;
+  return {
+    get(k,i){return all[uid(k,i)]||[];},
+    add(k,i,rev){const u=uid(k,i);(all[u]=all[u]||[]).unshift(rev);try{localStorage.setItem(K,JSON.stringify(all));}catch(e){}}
+  };
+})();
+
+/* drawer (shared by cart + favourites) */
+const drawer=document.getElementById('drawer'),drawerBack=document.getElementById('drawerBack'),
+  drawerBody=document.getElementById('drawerBody'),drawerFoot=document.getElementById('drawerFoot'),
+  drawerTitle=document.getElementById('drawerTitle');
+let drawerMode=null;
+function openDrawer(mode){drawerMode=mode;renderDrawer();drawer.classList.add('open');drawerBack.classList.add('open');drawer.setAttribute('aria-hidden','false');lockScroll(true);}
+function closeDrawer(){drawer.classList.remove('open');drawerBack.classList.remove('open');drawer.setAttribute('aria-hidden','true');drawerMode=null;if(!shopOv.classList.contains('open'))lockScroll(false);}
+drawerBack.addEventListener('click',closeDrawer);
+document.getElementById('drawerClose').addEventListener('click',closeDrawer);
+document.getElementById('cartBtn').addEventListener('click',()=>openDrawer('cart'));
+document.getElementById('favBtn').addEventListener('click',()=>openDrawer('fav'));
+addEventListener('keydown',e=>{if(e.key==='Escape'&&drawer.classList.contains('open'))closeDrawer();});
+
+function liThumb(p){return `<div class="thumb" data-go><img src="${imgW(p.img,160)}" alt="${p.name}" loading="lazy"></div>`;}
+function renderDrawer(){
+  if(!drawerMode)return;
+  if(drawerMode==='cart'){
+    drawerTitle.innerHTML='🛍 Your Cart';
+    const items=Store.cartItems();
+    if(!items.length){
+      drawerBody.innerHTML=`<div class="drawer-empty"><span class="emo">🛍</span>Your cart is empty.<br>Add something handmade ♥<button class="btn coral" data-shop>Browse collections</button></div>`;
+      drawerFoot.innerHTML='';
+    }else{
+      drawerBody.innerHTML=items.map(it=>{const p=findProd(it.key,it.id),c=CATALOG[it.key];
+        return `<div class="litem" data-key="${it.key}" data-id="${it.id}">${liThumb(p)}
+          <div class="li-main"><div class="li-name" data-go>${p.name}</div><div class="li-cat">${c.title}</div>
+          <div class="li-price">${priceFmt(p.price)}</div>
+          <div class="li-row"><div class="qty"><button data-dec aria-label="Decrease">−</button><span>${it.qty}</span><button data-inc aria-label="Increase">+</button></div>
+          <button class="li-rm" data-rm>Remove</button></div></div></div>`;}).join('');
+      const sub=Store.subtotal(),ship=(sub>=999||sub===0)?0:79;
+      drawerFoot.innerHTML=`<div class="cart-sum"><span class="lbl">Subtotal</span><span>${priceFmt(sub)}</span></div>
+        <div class="cart-sum"><span class="lbl">Shipping</span><span>${ship?priceFmt(ship):'Free'}</span></div>
+        <div class="cart-sum total"><span>Total</span><span>${priceFmt(sub+ship)}</span></div>
+        ${sub<999?`<div class="cart-ship">Add ${priceFmt(999-sub)} more for free shipping.</div>`:''}
+        <button class="btn coral" data-checkout>Checkout · ${priceFmt(sub+ship)}</button>`;
+    }
+  }else{
+    drawerTitle.innerHTML='♥ Favourites';
+    const items=Store.favItems();
+    if(!items.length){
+      drawerBody.innerHTML=`<div class="drawer-empty"><span class="emo">♡</span>No favourites yet.<br>Tap the heart on any piece you love.<button class="btn coral" data-shop>Browse collections</button></div>`;
+      drawerFoot.innerHTML='';
+    }else{
+      drawerBody.innerHTML=items.map(it=>{const p=findProd(it.key,it.id),c=CATALOG[it.key];
+        return `<div class="litem" data-key="${it.key}" data-id="${it.id}">${liThumb(p)}
+          <div class="li-main"><div class="li-name" data-go>${p.name}</div><div class="li-cat">${c.title}</div>
+          <div class="li-price">${priceFmt(p.price)}</div>
+          <div class="li-row"><button class="li-add" data-tocart>+ Add to cart</button>
+          <button class="li-rm" data-rmfav>Remove</button></div></div></div>`;}).join('');
+      drawerFoot.innerHTML=`<button class="btn coral" data-allcart>Add all to cart</button>`;
+    }
+  }
+  wireDrawer();
+}
+function wireDrawer(){
+  drawerBody.querySelectorAll('.litem').forEach(li=>{
+    const key=li.dataset.key,id=li.dataset.id;
+    const go=()=>{closeDrawer();openCategory(key);openProduct(key,id);};
+    li.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',go));
+    const inc=li.querySelector('[data-inc]');if(inc)inc.addEventListener('click',()=>Store.add(key,id,1));
+    const dec=li.querySelector('[data-dec]');if(dec)dec.addEventListener('click',()=>Store.add(key,id,-1));
+    const rm=li.querySelector('[data-rm]');if(rm)rm.addEventListener('click',()=>{Store.remove(key,id);toast('Removed from cart');});
+    const rmf=li.querySelector('[data-rmfav]');if(rmf)rmf.addEventListener('click',()=>{Store.removeFav(key,id);toast('Removed from favourites');});
+    const tc=li.querySelector('[data-tocart]');if(tc)tc.addEventListener('click',()=>{Store.add(key,id,1);toast('Added to cart ♥');});
+  });
+  const shop=drawerBody.querySelector('[data-shop]');if(shop)shop.addEventListener('click',()=>{closeDrawer();location.hash='#collections';});
+  const co=drawerFoot.querySelector('[data-checkout]');if(co)co.addEventListener('click',()=>toast('Secure checkout is coming soon ✦'));
+  const ac=drawerFoot.querySelector('[data-allcart]');if(ac)ac.addEventListener('click',()=>{Store.favItems().forEach(it=>Store.add(it.key,it.id,1));toast('Favourites added to cart ♥');openDrawer('cart');});
+}
+
+/* nav badges + heart sync */
+const cartCountEl=document.getElementById('cartCount'),favCountEl=document.getElementById('favCount'),favBtnEl=document.getElementById('favBtn');
+function renderBadges(){
+  const cc=Store.cartCount(),fc=Store.favCount();
+  cartCountEl.textContent=cc;cartCountEl.classList.toggle('show',cc>0);if(cc>0)pulse(cartCountEl);
+  favCountEl.textContent=fc;favCountEl.classList.toggle('show',fc>0);
+  favBtnEl.classList.toggle('fav-on',fc>0);
+}
+function pulse(el){if(!el)return;el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
+function syncHearts(){
+  document.querySelectorAll('[data-heart]').forEach(h=>{const{key,id}=(function(s){const i=s.indexOf(':');return{key:s.slice(0,i),id:s.slice(i+1)};})(h.dataset.heart);
+    const on=Store.isFav(key,id);h.classList.toggle('on',on);h.textContent=on?'♥':'♡';});
+}
+Store.onChange(()=>{renderBadges();syncHearts();if(drawerMode)renderDrawer();});
+renderBadges();
+
+function openCategory(key){
+  const c=CATALOG[key];if(!c)return;
+  ovTitle.textContent=c.title;
+  shopOv.style.setProperty('--cat',CATBG[key]||'var(--peach)');
+  catView.innerHTML=`<div class="cat-head"><div class="ek">${c.ek}</div><h2>${c.title}</h2></div>
+    <div class="cat-grid">${c.products.map((p,i)=>`
+      <div class="pcard" data-cat="${key}" data-id="${p.id}">
+        <div class="pi">${p.badge?`<span class="pbadge">${p.badge}</span>`:''}<button class="pcard-heart" data-heart="${key}:${p.id}" aria-label="Add to favourites">♡</button><img src="${imgW(p.img,600)}" alt="${p.name}" loading="lazy"></div>
+        <div class="pb"><h3>${p.name}</h3>
+          <div class="prow"><div class="price">${p.old?`<s>${priceFmt(p.old)}</s>`:''}${priceFmt(p.price)}</div><div class="stars">${starHTML(reviewStats(p).avg)}</div></div>
+          <div class="rc">${reviewStats(p).avg.toFixed(1)} · ${reviewStats(p).count} reviews</div>
+        </div>
+      </div>`).join('')}</div>`;
+  catView.querySelectorAll('.pcard').forEach(el=>el.addEventListener('click',()=>openProduct(el.dataset.cat,el.dataset.id)));
+  catView.querySelectorAll('.pcard-heart').forEach(h=>h.addEventListener('click',e=>{e.stopPropagation();const s=h.dataset.heart,i=s.indexOf(':');const on=Store.toggleFav(s.slice(0,i),s.slice(i+1));toast(on?'Saved to favourites ♥':'Removed from favourites');}));
+  syncHearts();
+  catView.scrollTop=0;
+  if(!reduced && window.gsap){
+    gsap.fromTo(catView.querySelector('.cat-head'),{y:26,opacity:0},{y:0,opacity:1,duration:.6,ease:'power3.out'});
+    gsap.fromTo(catView.querySelectorAll('.cat-grid .pcard'),{y:36,opacity:0,scale:.96},{y:0,opacity:1,scale:1,duration:.62,stagger:.06,delay:.1,ease:'power3.out'});
+  }
+  shopOv.classList.remove('in-pdp');
+  shopOv.classList.add('open');shopOv.setAttribute('aria-hidden','false');
+  lockScroll(true);
+}
+
+function openProduct(key,id){
+  const c=CATALOG[key];const p=c.products.find(x=>x.id===id);if(!p)return;
+  // Exchange/unboxing policy — shown on every product page
+  const policyHTML=`
+        <div class="pdp-policy">
+          <div class="pp-item"><span class="pp-ic">↺</span><div><b>Exchange only — no cancellations</b><p>Once an order is placed it can't be cancelled. We're glad to exchange a damaged or incorrect piece.</p></div></div>
+          <div class="pp-item"><span class="pp-ic">🎥</span><div><b>Record an unboxing video</b><p>Please film a clear, continuous video while opening the parcel — it's required for any exchange claim.</p></div></div>
+        </div>`;
+  pdpView.innerHTML=`
+    <div class="pdp-grid">
+      <div class="pdp-gal">
+        <div class="main" id="pdpMain"><img src="${imgW(p.img,1100)}" alt="${p.name}"></div>
+      </div>
+      <div class="pdp-info">
+        <div class="cat">${c.title}</div>
+        <h1>${p.name}</h1>
+        <div class="pdp-rate"><span class="stars">${starHTML(reviewStats(p).avg)}</span> ${reviewStats(p).avg.toFixed(1)} · ${reviewStats(p).count} reviews</div>
+        <div class="pdp-price">${p.old?`<s>${priceFmt(p.old)}</s>`:''}${priceFmt(p.price)}${p.old?`<span class="off">${Math.round((1-p.price/p.old)*100)}% off</span>`:''}</div>
+        <div class="pdp-tax">Inclusive of all taxes · Free shipping over ₹999</div>
+        <p class="pdp-desc">${p.desc}</p>
+        <ul class="pdp-specs">${p.specs.map(s=>`<li><span>${s[0]}</span><span>${s[1]}</span></li>`).join('')}</ul>
+        ${policyHTML}
+        <div class="pdp-actions">
+          <button class="btn coral" data-add>Add to cart</button>
+          <button class="btn ghost" data-custom>Request custom</button>
+          <button class="wish" data-wish data-heart="${key}:${p.id}">♡</button>
+        </div>
+      </div>
+    </div>
+    <div class="pdp-reviews">
+      <h3>What people say</h3>
+      <div class="rev-summary">
+        <div class="rev-score"><div class="big">${reviewStats(p).avg.toFixed(1)}</div><div><div class="stars" style="font-size:1.1rem">${starHTML(reviewStats(p).avg)}</div><div style="font-size:.85rem;color:#8a8076;margin-top:.2rem">Based on ${reviewStats(p).count} verified reviews</div></div></div>
+        <button class="btn coral rev-open" type="button">★ Share your review</button>
+      </div>
+      <form class="rev-form" hidden>
+        <div class="rf-label">Your rating</div>
+        <div class="rf-stars">${[1,2,3,4,5].map(v=>`<span data-v="${v}">★</span>`).join('')}</div>
+        <div class="rf-row"><input class="rf-name" placeholder="Your name" maxlength="40"><input class="rf-loc" placeholder="City (optional)" maxlength="40"></div>
+        <textarea class="rf-text" placeholder="Tell others what you loved about this piece…" maxlength="320"></textarea>
+        <div class="rf-actions"><button class="btn coral" type="submit">Post review</button><button class="btn ghost rf-cancel" type="button">Cancel</button></div>
+      </form>
+      <div class="rev-list">${Reviews.get(key,id).concat(p.reviews).map(revCardHTML).join('')}</div>
+    </div>`;
+  const main=pdpView.querySelector('#pdpMain');
+  pdpView.querySelectorAll('.thumbs button').forEach(b=>b.addEventListener('click',()=>{main.style.background=b.dataset.bg;pdpView.querySelectorAll('.thumbs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');}));
+  pdpView.querySelector('[data-add]').addEventListener('click',()=>{Store.add(key,id,1);toast('Added to cart ♥');openDrawer('cart');});
+  pdpView.querySelector('[data-custom]').addEventListener('click',()=>{closeShop();setTimeout(()=>{location.hash='#custom';},320);});
+  const wish=pdpView.querySelector('[data-wish]');
+  wish.addEventListener('click',()=>{const on=Store.toggleFav(key,id);toast(on?'Saved to favourites ♥':'Removed from favourites');});
+  syncHearts();
+  /* share-your-review form */
+  const revOpen=pdpView.querySelector('.rev-open'),revForm=pdpView.querySelector('.rev-form'),revList=pdpView.querySelector('.rev-list');
+  if(revOpen&&revForm){
+    let rfRating=5;
+    const stars=revForm.querySelectorAll('.rf-stars span');
+    const paint=v=>stars.forEach(s=>s.classList.toggle('on',+s.dataset.v<=v));
+    paint(rfRating);
+    stars.forEach(s=>{s.addEventListener('click',()=>{rfRating=+s.dataset.v;paint(rfRating);});s.addEventListener('mouseenter',()=>paint(+s.dataset.v));});
+    revForm.querySelector('.rf-stars').addEventListener('mouseleave',()=>paint(rfRating));
+    revOpen.addEventListener('click',()=>{revForm.hidden=!revForm.hidden;if(!revForm.hidden)revForm.querySelector('.rf-name').focus();});
+    revForm.querySelector('.rf-cancel').addEventListener('click',()=>{revForm.hidden=true;});
+    revForm.addEventListener('submit',e=>{e.preventDefault();
+      const t=revForm.querySelector('.rf-text').value.trim();
+      if(!t){toast('Please add a few words ♥');return;}
+      const nm=revForm.querySelector('.rf-name').value.trim()||'Guest';
+      const loc=revForm.querySelector('.rf-loc').value.trim()||'Verified buyer';
+      const rev={n:nm,loc,r:rfRating,t,you:true,pending:true};
+      revList.insertAdjacentHTML('afterbegin',revCardHTML(rev));   // optimistic, this session only
+      revForm.reset();rfRating=5;paint(5);revForm.hidden=true;
+      /* send to Sanity as PENDING via the serverless function; the client approves it in the Studio */
+      fetch('/.netlify/functions/submit-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:id,name:nm,location:loc,rating:rfRating,text:t})})
+        .then(r=>toast(r.ok?'Thanks! Your review is pending approval ♥':'Thanks! We received your review ♥'))
+        .catch(()=>toast('Thanks! We received your review ♥'));
+    });
+  }
+  pdpView.scrollTop=0;
+  shopOv.classList.add('open');shopOv.setAttribute('aria-hidden','false');lockScroll(true);
+  shopOv.classList.add('in-pdp');
+}
+
+function closeShop(){shopOv.classList.remove('open','in-pdp');shopOv.setAttribute('aria-hidden','true');lockScroll(false);}
+document.getElementById('ovClose').addEventListener('click',closeShop);
+document.getElementById('ovBack').addEventListener('click',()=>shopOv.classList.remove('in-pdp'));
+addEventListener('keydown',e=>{if(e.key==='Escape'&&shopOv.classList.contains('open')){shopOv.classList.contains('in-pdp')?shopOv.classList.remove('in-pdp'):closeShop();}});
+
+let _toastT;
+function toast(msg){let t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t);}t.textContent=msg;requestAnimationFrame(()=>t.classList.add('show'));clearTimeout(_toastT);_toastT=setTimeout(()=>t.classList.remove('show'),1800);}
+
+/* trending: uniform wall of real product pins */
+const board=[
+ {key:'peacock',id:'pk1',ig:'@meera.home'},
+ {key:'floral',id:'fr2',ig:'@dwell.delhi',q:'“my doorway has never looked this good.”'},
+ {key:'corner',id:'cr2',ig:'@bloom.diaries'},
+ {key:'diya',id:'dl3',ig:'@diwali.glow'},
+ {key:'border',id:'bt1',ig:'@thenairs',q:'“feels handmade, looks designer.”'},
+ {key:'border',id:'tb5',ig:'@festive.foyer'},
+ {key:'peacock',id:'pk2',ig:'@the.patels'},
+ {key:'floral',id:'fr4',ig:'@styled.spaces',q:'“they nailed my exact palette.”'},
+];
+const GLOW2={peacock:'rgba(56,128,150,.6)',floral:'rgba(255,138,128,.6)',corner:'rgba(240,150,70,.6)',border:'rgba(199,184,234,.62)',diya:'rgba(225,70,100,.58)',flowers:'rgba(255,118,108,.6)'};
+function renderBoard(){document.getElementById('board').innerHTML=board.map(b=>`
+ <div class="tpin rv" data-key="${b.key}" data-id="${b.id}">
+   <div class="tpinner" style="--glow:${GLOW2[b.key]||'rgba(34,34,34,.45)'}">
+     <img src="${imgW(PIMG[b.id],640)}" alt="" loading="lazy">
+     <span class="heart">♥</span>
+     ${b.q?`<div class="q">${b.q}</div>`:''}
+     <div class="view">View product →</div>
+   </div>
+ </div>`).join('');
+document.querySelectorAll('.tpin').forEach(t=>t.querySelector('.tpinner').addEventListener('click',()=>{openCategory(t.dataset.key);openProduct(t.dataset.key,t.dataset.id);}));}
+
+/* process steps with sketch doodles */
+const steps=[
+ {n:'01',t:'We sketch it',p:'Every piece starts as a doodle and a colour mood.',draw:`<svg viewBox="0 0 120 120"><path d="M24 92 L84 32 q8-8 16 0 t0 16 L56 104 L24 92Z"/><line x1="24" y1="92" x2="40" y2="100"/><path d="M70 46 L86 62"/></svg>`},
+ {n:'02',t:'Hands get busy',p:'Carved, tufted and shaped by artisans, slowly.',draw:`<svg viewBox="0 0 120 120"><path d="M44 64 V40 a7 7 0 0114 0 v20 M58 58 V34 a7 7 0 0114 0 v26 M72 62 V44 a7 7 0 0114 0 v30 a22 22 0 01-22 22 h-6 a20 20 0 01-20-20 v-8 l-7-10 a6 6 0 0110-8 l7 9"/></svg>`},
+ {n:'03',t:'Tiny details',p:'Pearls, stones and gold lines, set one by one.',draw:`<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="30"/><circle cx="60" cy="60" r="10"/><line x1="60" y1="14" x2="60" y2="26"/><line x1="60" y1="94" x2="60" y2="106"/><line x1="14" y1="60" x2="26" y2="60"/><line x1="94" y1="60" x2="106" y2="60"/></svg>`},
+ {n:'04',t:'Off to you',p:'Wrapped with care and sent to your doorstep.',draw:`<svg viewBox="0 0 120 120"><path d="M30 50 L60 36 L90 50 L60 64 Z"/><path d="M30 50 V82 L60 96 V64"/><path d="M90 50 V82 L60 96"/><line x1="60" y1="36" x2="60" y2="96"/></svg>`},
+];
+document.getElementById('steps').innerHTML=steps.map(s=>`
+ <div class="step rv"><div class="draw">${s.draw}</div><div class="n">${s.n}</div><h4>${s.t}</h4><p>${s.p}</p></div>`).join('');
+
+/* testimonials */
+const ts=[
+ {q:'Obsessed. My festive doorway finally feels *me*.',nm:'Aarohi M.',lo:'Mumbai',bg:'var(--peach)',av:'var(--coral)',x:'0%',y:'24px',r:-4},
+ {q:'Looks designer, feels handmade. Everyone asks where it\'s from.',nm:'Rohit V.',lo:'Pune',bg:'var(--lav)',av:'#9a86d6',x:'60%',y:'0px',r:5},
+ {q:'They matched my exact colour palette. Magic.',nm:'Sneha K.',lo:'Delhi',bg:'var(--sage)',av:'#6f9165',x:'15%',y:'210px',r:3},
+ {q:'The detailing is unreal for the price. Worth it.',nm:'Imran S.',lo:'Hyderabad',bg:'#ffe0d2',av:'var(--coral)',x:'63%',y:'250px',r:-5},
+ {q:'Brightened up my whole entrance — compliments daily.',nm:'Meera R.',lo:'Jaipur',bg:'var(--lav)',av:'#9a86d6',x:'1%',y:'400px',r:6},
+ {q:'Packaging was so cute, felt like a gift to myself.',nm:'Karan D.',lo:'Surat',bg:'var(--peach)',av:'var(--coral)',x:'39%',y:'350px',r:-3},
+ {q:'The lotus looks so real and soft. Smitten.',nm:'Priya N.',lo:'Kochi',bg:'var(--sage)',av:'#6f9165',x:'70%',y:'500px',r:4},
+ {q:'Fits my corner perfectly. Lovely, lovely work.',nm:'Devang S.',lo:'Ahmedabad',bg:'#ffe0d2',av:'var(--coral)',x:'9%',y:'610px',r:-5},
+ {q:'Even prettier in person than the photos. 10/10.',nm:'Nisha P.',lo:'Chennai',bg:'var(--lav)',av:'#9a86d6',x:'45%',y:'640px',r:5},
+];
+const reviewCards=ts.map(t=>`
+   <div class="tcard" style="background:${t.bg}">
+     <div class="st">★★★★★</div><p>${t.q}</p>
+     <div class="who"><div class="av" style="background:${t.av}">${t.nm[0]}</div><div><div class="nm">${t.nm}</div><div class="lo">${t.lo}</div></div></div>
+   </div>`).join('');
+/* duplicate the set so the horizontal scroll loops seamlessly */
+document.getElementById('reviewTrack').innerHTML=reviewCards+reviewCards;
+
+/* shop by occasion */
+const occasions=[
+ {cat:'diya',  img:'', t:'Diwali & Festivals', h:'light up the season'},
+ {cat:'border',img:'', t:'Weddings & Functions', h:'doorways done right'},
+ {cat:'peacock',img:'',t:'Housewarming', h:'a warm welcome home'},
+ {cat:'corner',img:'', t:'Everyday Corners', h:'small joys, daily'},
+];
+function renderOccasions(){document.getElementById('occgrid').innerHTML=occasions.map(o=>`
+ <a class="occcard rv" data-cat="${o.cat}" role="button" tabindex="0">
+   <img src="${COVER[o.cat]||''}" alt="${o.t}" loading="lazy">
+   <span class="ov"></span><span class="ring"></span>
+   <span class="meta"><span class="t">${o.t}</span><span class="h">${o.h}</span><span class="shopnow">Shop now →</span></span>
+ </a>`).join('');
+document.querySelectorAll('.occcard[data-cat]').forEach(c=>{
+  const go=()=>openCategory(c.dataset.cat);
+  c.addEventListener('click',go);
+  c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+});}
+
+
+/* Load the catalogue (Sanity if configured, else built-in) and render all
+   product sections. Runs here — after every data array is defined. */
+bootCatalog();
+
+/* ===== smooth scroll + GSAP ===== */
+const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const small=matchMedia('(max-width:820px)').matches;
+if(window.gsap)gsap.registerPlugin(ScrollTrigger);
+let lenis;
+if(!reduced && typeof Lenis!=='undefined'){
+  lenis=new Lenis({lerp:.1,smoothWheel:true});window.lenis=lenis;
+  lenis.on('scroll',()=>ScrollTrigger.update());
+  gsap.ticker.add(t=>lenis.raf(t*1000));gsap.ticker.lagSmoothing(0);
+  // Keep the page still while the intro loader is on screen; it calls lenis.start() when done.
+  if(document.documentElement.classList.contains('loading'))lenis.stop();
+}
+
+/* menu */
+const burger=document.getElementById('burger'),mob=document.getElementById('mobile');
+burger.addEventListener('click',()=>{mob.classList.toggle('open');if(lenis){mob.classList.contains('open')?lenis.stop():lenis.start();}});
+mob.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{mob.classList.remove('open');lenis&&lenis.start();}));
+mob.querySelectorAll('[data-open]').forEach(a=>a.addEventListener('click',()=>openDrawer(a.dataset.open)));
+
+/* smooth in-page navigation */
+(function(){
+  const navOffset=96;
+  function goTo(target){
+    if(window.lenis){
+      window.lenis.scrollTo(target,{offset:-navOffset,duration:1.1,easing:t=>1-Math.pow(1-t,3)});
+    } else {
+      const y=target.getBoundingClientRect().top+window.pageYOffset-navOffset;
+      window.scrollTo({top:y,behavior:reduced?'auto':'smooth'});
+    }
+  }
+  document.addEventListener('click',e=>{
+    const link=e.target.closest('a[href^="#"]');
+    if(!link)return;
+    const id=link.getAttribute('href');
+    if(!id||id.length<2)return;
+    const target=document.querySelector(id);
+    if(!target)return;
+    e.preventDefault();
+    if(mob.classList.contains('open')){mob.classList.remove('open');lenis&&lenis.start();}
+    goTo(target);
+    history.pushState(null,'',id);
+  });
+})();
+
+/* magnetic buttons */
+function magnetic(el){if(reduced||small)return;el.addEventListener('mousemove',e=>{const r=el.getBoundingClientRect();gsap.to(el,{x:(e.clientX-r.left-r.width/2)*.35,y:(e.clientY-r.top-r.height/2)*.35,duration:.5,ease:'power3.out'});});el.addEventListener('mouseleave',()=>gsap.to(el,{x:0,y:0,duration:.6,ease:'elastic.out(1,.4)'}));}
+document.querySelectorAll('.btn').forEach(magnetic);
+
+if(!reduced && window.gsap){
+  /* hero entrance */
+  gsap.from('.htext,.squiggle,.h-tag,.h-cta',{y:30,opacity:0,duration:1,stagger:.08,ease:'power3.out',delay:.1});
+  if(!small){
+    gsap.from('.pincard',{y:60,opacity:0,scale:.9,duration:1,stagger:.12,ease:'back.out(1.4)',delay:.25});
+    /* idle float */
+    gsap.utils.toArray('.pincard').forEach((c,i)=>gsap.to(c,{y:i%2?-16:16,duration:3+i*.5,repeat:-1,yoyo:true,ease:'sine.inOut'}));
+    gsap.utils.toArray('.blob').forEach((b,i)=>gsap.to(b,{y:i%2?30:-30,x:i%2?-20:20,duration:7+i,repeat:-1,yoyo:true,ease:'sine.inOut'}));
+
+    /* mouse parallax hero */
+    const movers=[...document.querySelectorAll('[data-d]')].map(el=>({el,d:+el.dataset.d,qx:gsap.quickTo(el,'x',{duration:.8,ease:'power2'}),qy:gsap.quickTo(el,'y',{duration:.8,ease:'power2'})}));
+    document.getElementById('stage').addEventListener('mousemove',e=>{const nx=e.clientX/innerWidth-.5,ny=e.clientY/innerHeight-.5;movers.forEach(m=>{m.qx(nx*m.d);m.qy(ny*m.d*.5);});});
+  }
+
+  /* collection card 3D tilt */
+  if(!small){
+    document.querySelectorAll('.collcard').forEach(card=>{
+      const inner=card.querySelector('.cinner');
+      const rx=gsap.quickTo(inner,'rotationX',{duration:.5,ease:'power2'}),
+            ry=gsap.quickTo(inner,'rotationY',{duration:.5,ease:'power2'}),
+            qy=gsap.quickTo(inner,'y',{duration:.5,ease:'power2'});
+      card.addEventListener('mouseenter',()=>qy(-10));
+      card.addEventListener('mousemove',e=>{const r=card.getBoundingClientRect();const px=(e.clientX-r.left)/r.width-.5,py=(e.clientY-r.top)/r.height-.5;ry(px*15);rx(-py*15);});
+      card.addEventListener('mouseleave',()=>{rx(0);ry(0);qy(0);});
+    });
+  }
+
+  /* generic reveals */
+  gsap.utils.toArray('.rv').forEach(el=>gsap.to(el,{opacity:1,y:0,duration:.9,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 88%'}}));
+  ['#collgrid','.pinwall','.steps','.occgrid'].forEach(sel=>{
+    const items=gsap.utils.toArray(sel+' .rv');
+    if(items.length)gsap.to(items,{opacity:1,y:0,duration:.7,stagger:.08,ease:'power3.out',scrollTrigger:{trigger:sel,start:'top 84%'}});
+  });
+  /* vertical review marquee scrolls via CSS animation (see .review-vtrack) */
+
+  /* sketch draw-in */
+  document.querySelectorAll('.step .draw svg').forEach(svg=>{
+    svg.querySelectorAll('path,circle,line').forEach(p=>{
+      const len=p.getTotalLength?p.getTotalLength():200;
+      gsap.set(p,{strokeDasharray:len,strokeDashoffset:len});
+      gsap.to(p,{strokeDashoffset:0,duration:1.1,ease:'power2.inOut',scrollTrigger:{trigger:svg,start:'top 85%'}});
+    });
+  });
+
+  /* occasion image reveals (clip) */
+  gsap.utils.toArray('.occcard').forEach(f=>gsap.from(f,{clipPath:'inset(100% 0 0 0)',duration:1,ease:'power3.out',scrollTrigger:{trigger:f,start:'top 90%'}}));
+
+  setTimeout(()=>ScrollTrigger.refresh(),300);
+  addEventListener('load',()=>ScrollTrigger.refresh());
+}else{
+  document.querySelectorAll('.rv').forEach(e=>{e.style.opacity=1;e.style.transform='none';});
+}
+window.__revealReady=true;   // sections rendered after this must be force-shown (see revealSections)
+
+/* ===== editorial mobile hero: parallax + nav scroll state + reveal trigger ===== */
+(function(){
+  var nav=document.querySelector('.nav');
+  var par=document.getElementById('mheroParallax');
+  var mhero=document.getElementById('mhero');
+  var mq=matchMedia('(max-width:820px)');
+  var ticking=false;
+  function frame(){
+    ticking=false;
+    var y=window.pageYOffset||document.documentElement.scrollTop||0;
+    if(nav)nav.classList.toggle('nav-solid', y>24);
+    if(par && mq.matches && y < innerHeight){ par.style.transform='translateY('+(y*0.32).toFixed(1)+'px)'; }
+  }
+  function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(frame); } }
+  addEventListener('scroll',onScroll,{passive:true});
+  if(window.lenis && window.lenis.on)window.lenis.on('scroll',onScroll);
+  frame();
+  // play the staggered reveal + Ken Burns once the intro loader is done (so it isn't hidden behind it)
+  function go(){ if(mhero)mhero.classList.add('go'); }
+  addEventListener('intro:done', go);
+  if(!document.getElementById('loader'))go();   // loader already gone
+  setTimeout(go, 4500);                          // safety fallback
+})();
+
+/* ===== Premium Diwali cinematic (canvas): diya ignites -> elegant fireworks ->
+   golden sparkles + drifting marigold petals -> gentle fade. Plays once per page
+   load when scrolled past the hero in the Diwali theme. Additive glow, pre-rendered
+   sprites, single rAF loop -> smooth. Respects reduced-motion. No layout impact. */
+(function(){
+  const cv=document.getElementById('dwFx'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  let W=0,H=0,DPR=1, played=false, running=false, raf=0, t0=0, lastMs=0, lastLaunch=0;
+  let sparks=[], rockets=[], sparkles=[], petals=[], smoke=[];
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+
+  function size(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);}
+  function glow(r,g,b){const s=48,c=document.createElement('canvas');c.width=c.height=s;const x=c.getContext('2d');const gr=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);gr.addColorStop(0,'rgba(255,255,255,.95)');gr.addColorStop(.28,`rgba(${r},${g},${b},.85)`);gr.addColorStop(.6,`rgba(${r},${g},${b},.28)`);gr.addColorStop(1,`rgba(${r},${g},${b},0)`);x.fillStyle=gr;x.fillRect(0,0,s,s);return c;}
+  const COL=[[255,205,105],[255,244,222],[247,226,176],[255,168,72]]; // gold, warm-white, champagne, saffron
+  const SPR=COL.map(c=>glow(c[0],c[1],c[2]));
+  const pick=()=>(Math.random()*SPR.length)|0;
+
+  function burst(x,y,ci){
+    const n=64+((Math.random()*40)|0), base=rnd(2.6,4.2);
+    for(let i=0;i<n;i++){const a=Math.random()*6.283, sp=base*rnd(.25,1);
+      sparks.push({x,y,px:x,py:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:rnd(.8,1.5),max:1.5,ci,sz:rnd(2,3.6)});}
+    for(let i=0;i<10;i++){const a=Math.random()*6.283, sp=base*rnd(.1,.4);
+      sparks.push({x,y,px:x,py:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:rnd(1.6,2.4),max:2.4,ci,sz:rnd(1.4,2.4),ember:1});}
+    for(let i=0;i<3;i++)smoke.push({x:x+rnd(-14,14),y:y+rnd(-10,10),r:rnd(16,26),vr:rnd(10,16),vy:-rnd(6,12),life:1});
+  }
+  const launch=()=>rockets.push({x:rnd(W*.18,W*.82),y:H*1.02,px:0,py:H,vy:-rnd(7.5,10.5),ty:rnd(H*.14,H*.4),ci:pick()});
+  const spawnSparkle=()=>sparkles.push({x:rnd(0,W),y:rnd(H*.05,H*.82),ph:Math.random()*6.283,sp:rnd(1.6,3.2),sz:rnd(1.2,2.6),ci:pick()});
+  function spawnPetal(){const m=Math.random()<.5?[255,168,40]:[255,120,30];petals.push({x:rnd(0,W),y:-20,vy:rnd(22,42),sway:rnd(18,42),ph:Math.random()*6.283,rot:Math.random()*6.283,vr:rnd(-.8,.8),sz:rnd(9,15),c:m,life:1});}
+
+  function drawDiya(cx,cy){
+    ctx.save();ctx.translate(cx,cy);
+    let g=ctx.createLinearGradient(0,-14,0,40);g.addColorStop(0,'#e7b567');g.addColorStop(.5,'#bd7f37');g.addColorStop(1,'#6b3f1b');
+    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(-72,-6);ctx.quadraticCurveTo(0,58,72,-6);ctx.closePath();ctx.fill();
+    g=ctx.createLinearGradient(-72,0,72,0);g.addColorStop(0,'#9a5f28');g.addColorStop(.5,'#f3d485');g.addColorStop(1,'#9a5f28');
+    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(0,-6,72,12,0,0,6.283);ctx.fill();
+    ctx.fillStyle='rgba(66,38,15,.55)';ctx.beginPath();ctx.ellipse(0,-6,58,8,0,0,6.283);ctx.fill();
+    ctx.fillStyle='rgba(255,235,190,.5)';ctx.beginPath();ctx.ellipse(-24,-8,10,3,0,0,6.283);ctx.fill();
+    ctx.restore();
+  }
+  function drawFlame(x,y,h){
+    ctx.save();ctx.translate(x,y);ctx.scale(1,h);
+    let g=ctx.createRadialGradient(0,-6,0,0,-6,34);g.addColorStop(0,'rgba(255,180,70,.5)');g.addColorStop(1,'rgba(255,150,40,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,-6,34,0,6.283);ctx.fill();
+    g=ctx.createRadialGradient(0,-6,0,0,-6,16);g.addColorStop(0,'#fff6cf');g.addColorStop(.35,'#ffd15a');g.addColorStop(.75,'#ff8f2e');g.addColorStop(1,'rgba(255,120,30,0)');ctx.fillStyle=g;
+    ctx.beginPath();ctx.moveTo(0,-34);ctx.bezierCurveTo(11,-20,10,-2,0,4);ctx.bezierCurveTo(-10,-2,-11,-20,0,-34);ctx.closePath();ctx.fill();
+    g=ctx.createRadialGradient(0,-4,0,0,-4,6);g.addColorStop(0,'rgba(255,255,240,.95)');g.addColorStop(1,'rgba(255,220,150,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,-6,6,0,6.283);ctx.fill();
+    ctx.restore();
+  }
+  function drawPetal(p){
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.globalAlpha=.92*p.life;
+    const g=ctx.createLinearGradient(0,-p.sz,0,p.sz);g.addColorStop(0,`rgba(${p.c[0]},${p.c[1]},${p.c[2]},1)`);g.addColorStop(1,`rgba(${Math.max(0,p.c[0]-40)},${Math.max(0,p.c[1]-60)},20,1)`);
+    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(0,0,p.sz*.6,p.sz,0,0,6.283);ctx.fill();
+    ctx.strokeStyle='rgba(150,70,10,.35)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-p.sz*.8);ctx.lineTo(0,p.sz*.8);ctx.stroke();
+    ctx.restore();
+  }
+
+  function step(now){
+    const t=(now-t0)/1000, dt=lastMs?Math.min(.034,(now-lastMs)/1000):0; lastMs=now;
+    ctx.clearRect(0,0,W,H);
+    const cx=W/2, cy=H*.52;
+    const clamp=x=>x<0?0:x>1?1:x;
+    const darkA=Math.min(1,t/.9);              // 1) darkness fades IN first
+    const diyaA=clamp((t-.55)/.5);             // 2) diya appears once the screen is dark
+    const flame=clamp((t-.9)/.55);             //    then the flame ignites
+    const glowR=clamp((t-1.0)/.9);             //    warm glow spreads outward
+    const fwOn=t>1.6&&t<3.7, ambient=t>1.4&&t<3.7;  // 3) fireworks + sparkles + petals
+    // gradual darkness envelope (radial: a touch clearer over the diya, deeper at the edges)
+    if(darkA>0){const rg=ctx.createRadialGradient(cx,cy,H*.10,cx,cy,H);rg.addColorStop(0,`rgba(14,8,4,${darkA*.55})`);rg.addColorStop(1,`rgba(9,5,2,${darkA*.82})`);ctx.fillStyle=rg;ctx.fillRect(0,0,W,H);}
+
+    if(ambient){ if(sparkles.length<44&&Math.random()<.6)spawnSparkle(); if(petals.length<7&&Math.random()<.14)spawnPetal(); }
+    if(fwOn&&now-lastLaunch>rnd(260,520)){launch(); if(Math.random()<.35)launch(); lastLaunch=now;}
+
+    ctx.globalCompositeOperation='lighter';
+    for(let i=rockets.length-1;i>=0;i--){const r=rockets[i];r.py=r.y;r.y+=r.vy;r.vy+=.12;const s=SPR[r.ci];
+      ctx.globalAlpha=.9;ctx.drawImage(s,r.x-8,r.y-8,16,16);ctx.globalAlpha=.45;ctx.drawImage(s,r.x-5,r.py-5,10,10);
+      if(r.y<=r.ty||r.vy>=-1){burst(r.x,r.y,r.ci);rockets.splice(i,1);}}
+    for(let i=sparks.length-1;i>=0;i--){const p=sparks[i];p.px=p.x;p.py=p.y;p.vy+=(p.ember?.03:.055);p.vx*=.985;p.vy*=.985;p.x+=p.vx;p.y+=p.vy;p.life-=dt;
+      if(p.life<=0){sparks.splice(i,1);continue;}
+      const a=Math.max(0,p.life/p.max),s=SPR[p.ci],d=p.sz*4;
+      ctx.globalAlpha=a*.35;ctx.drawImage(s,p.px-d/2,p.py-d/2,d,d);ctx.globalAlpha=a;ctx.drawImage(s,p.x-d/2,p.y-d/2,d,d);}
+    for(let i=sparkles.length-1;i>=0;i--){const q=sparkles[i];q.ph+=q.sp*dt*2.2;const tw=(Math.sin(q.ph)+1)/2;
+      if(!ambient&&tw<.05){sparkles.splice(i,1);continue;}
+      const s=SPR[q.ci],d=q.sz*4*(.6+tw*.8);ctx.globalAlpha=tw*.9;ctx.drawImage(s,q.x-d/2,q.y-d/2,d,d);}
+
+    if(glowR>0){const gr=ctx.createRadialGradient(cx,cy-6,0,cx,cy-6,230*glowR);gr.addColorStop(0,`rgba(255,190,90,${.5*flame})`);gr.addColorStop(.4,`rgba(255,150,50,${.2*flame})`);gr.addColorStop(1,'rgba(255,150,50,0)');ctx.globalAlpha=1;ctx.fillStyle=gr;ctx.fillRect(cx-260,cy-260,520,520);}
+    if(flame>0){const fl=now/90;const jx=Math.sin(fl*1.7)*1.6+Math.sin(fl*3.1)*.8;const fh=(1+Math.sin(fl*2.3)*.06+Math.sin(fl*5.1)*.03)*flame;drawFlame(cx+jx,cy-10,fh);}
+    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=diyaA;drawDiya(cx,cy);ctx.globalAlpha=1;
+
+    for(let i=petals.length-1;i>=0;i--){const p=petals[i];p.y+=p.vy*dt;p.ph+=dt*1.4;p.rot+=p.vr*dt;p.x+=Math.sin(p.ph)*p.sway*dt;
+      if(p.y>H+30){petals.splice(i,1);continue;}drawPetal(p);}
+    for(let i=smoke.length-1;i>=0;i--){const m=smoke[i];m.r+=m.vr*dt;m.y+=m.vy*dt;m.life-=dt*.5;
+      if(m.life<=0){smoke.splice(i,1);continue;}
+      ctx.globalAlpha=m.life*.1;const rg=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,m.r);rg.addColorStop(0,'rgba(120,100,80,1)');rg.addColorStop(1,'rgba(120,100,80,0)');ctx.fillStyle=rg;ctx.beginPath();ctx.arc(m.x,m.y,m.r,0,6.283);ctx.fill();}
+    ctx.globalAlpha=1;
+
+    if(t>=3.9)cv.classList.add('out');   // 4) darkness + scene slowly fade out (CSS opacity, keeps animating)
+    if(t>=4.9){running=false;cancelAnimationFrame(raf);ctx.clearRect(0,0,W,H);cv.classList.remove('on','out');return;}
+    raf=requestAnimationFrame(step);
+  }
+
+  function start(){ if(played||running)return; played=true;running=true;size();sparks=[];rockets=[];sparkles=[];petals=[];smoke=[];lastMs=0;lastLaunch=0;
+    cv.classList.remove('out');cv.classList.add('on');t0=performance.now();raf=requestAnimationFrame(step);}
+  function maybe(){ if(played||reduced)return; if(document.documentElement.getAttribute('data-theme')!=='diwali')return; if(scrollY<innerHeight*0.55)return; start(); }
+  addEventListener('scroll',maybe,{passive:true});
+  addEventListener('resize',()=>{if(running)size();});
+  document.addEventListener('themechange',maybe);
+})();
+
+/* ===== Cloud wipe (Ganpati theme): as the hero scrolls out, white clouds sweep
+   up and cover the screen, then part to reveal the mandap cinematic. Scrubbed
+   over the 100vh in which #gnScene enters the viewport, so scrolling back up
+   plays it in reverse. Skipped under reduced-motion (plain cut instead). ===== */
+(function(){
+  const wipe=document.getElementById('cloudWipe'),scene=document.getElementById('gnScene');
+  if(!wipe||!scene||reduced||!window.gsap||!window.ScrollTrigger)return;
+  const bank=wipe.querySelector('.cw-bank');
+  // puff bands in bank coords (vh from bank top): leading edge, dense middle, trailing edge
+  const bands=[[0,90,small?5:8],[70,190,small?7:12],[170,260,small?4:7]];
+  bands.forEach(([a,b,n])=>{for(let i=0;i<n;i++){
+    const p=document.createElement('div');p.className='cw-puff';
+    const w=26+Math.random()*40, h=16+Math.random()*14;       // width vw, height vh
+    p.style.width=w+'vw';p.style.height=h+'vh';
+    p.style.left=(Math.random()*116-14)+'%';
+    p.style.top=Math.min(a+Math.random()*(b-a),252-h)+'vh';   // never overflow the bank bottom
+    p.style.opacity=.82+Math.random()*.18;
+    bank.appendChild(p);}});
+  let made=false;
+  function init(){
+    if(made||document.documentElement.getAttribute('data-theme')!=='ganpati')return;
+    made=true;
+    // -370vh overshoots so the bank clears the viewport with margin; the layer also
+    // fades over the last stretch so no cloud lingers on the cinematic.
+    const tl=gsap.timeline({scrollTrigger:{trigger:scene,start:'top bottom',end:'top top',scrub:.35}});
+    tl.fromTo(bank,{y:0},{y:'-370vh',ease:'none',duration:1},0)
+      .fromTo(wipe,{opacity:1},{opacity:0,duration:.16,ease:'none'},.84);
+    ScrollTrigger.refresh();
+  }
+  init();
+  document.addEventListener('themechange',init);
+})();
+
+/* ===== Typewriter reveal for the hero "made by hand" kick (Diwali theme only).
+   Gated on the hero actually being visible (after the intro loader) so the typing
+   isn't spent behind the loader; and on the Diwali theme being active. ===== */
+(function(){
+  const els=[...document.querySelectorAll('.stage .kick, .mhero-label')];
+  if(!els.length) return;
+  const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const themed=()=>{const t=document.documentElement.getAttribute('data-theme');return !!t&&t!=='default';};
+  let heroShown=false;
+  const state=els.map(el=>({el,full:el.textContent,done:false}));
+  function typeOne(s){
+    if(s.done||!heroShown||!themed())return; s.done=true;
+    if(reduced)return;                    // leave the full text as-is
+    s.el.textContent=''; s.el.classList.add('typing');
+    let i=0;
+    (function tick(){
+      s.el.textContent=s.full.slice(0,i); i++;
+      if(i<=s.full.length) setTimeout(tick, 72+Math.random()*55);
+      else setTimeout(()=>s.el.classList.remove('typing'), 1100);
+    })();
+  }
+  function typeAll(){ state.forEach(typeOne); }
+  function heroReady(){ heroShown=true; setTimeout(typeAll,300); }
+  if(document.getElementById('loader')) addEventListener('intro:done',heroReady); else heroReady();
+  setTimeout(heroReady, 6500);                      // safety net if the loader event is missed
+  document.addEventListener('themechange',typeAll); // in case the theme is applied after the hero shows
+})();
+</script>
+
+<!-- Ganpati cinematic: GPU particles (Three.js + GLSL + bloom). Lazily loaded, Ganpati theme only. -->
+<script type="module" src="ganpati-scene.js?v=8"></script>
+</body>
+</html>
