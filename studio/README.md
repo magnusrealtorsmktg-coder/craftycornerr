@@ -127,6 +127,49 @@ lives only on the server (never in the site code):
 Until this token is set, the review form thanks the visitor but nothing is saved.
 Keep this Editor token **only** in Netlify's env — never in `index.html`.
 
+## Part D — Taking payments (Razorpay)
+
+### Marking something sold out
+Every product has an **Available to buy** switch. Turn it **off** and the piece still
+shows on the website, but with "Temporarily unavailable" instead of a buy button —
+useful for a one-off that has sold or is being remade. Turn it back on when it's ready.
+
+### Where orders arrive
+A paid order does two things at once:
+1. It appears in the Studio under **Orders — to pack**, with the full shipping
+   address, the items, and the amount paid.
+2. It is emailed to the studio as a packing slip.
+
+Open the order, copy the address onto the courier slip, then set **Status** to
+**📦 Shipped** and put the tracking number in **Courier / tracking note**.
+
+Orders stuck on **⏳ Awaiting payment** are people who opened the payment window and
+closed it — they were never charged, and you can ignore them.
+
+The money/address fields are locked on purpose: they are written straight from the
+payment and must match what the customer actually paid.
+
+### One-time setup (developer)
+In Netlify → **Site configuration → Environment variables**, add:
+
+| Key | Value | Where it comes from |
+|---|---|---|
+| `RAZORPAY_KEY_ID` | `rzp_test_…` (later `rzp_live_…`) | Razorpay → Settings → API Keys |
+| `RAZORPAY_KEY_SECRET` | the matching secret | shown **once** when the key is generated |
+| `SANITY_WRITE_TOKEN` | an Editor token | sanity.io/manage → API → Tokens |
+
+Redeploy after adding them. Until `RAZORPAY_*` are set the checkout politely refuses
+and sends people to WhatsApp; until `SANITY_WRITE_TOKEN` is set it refuses too, because
+it cannot verify prices against the catalogue and will not guess.
+
+Test with Razorpay in **Test Mode** first — card `4111 1111 1111 1111`, any future
+expiry and CVV, takes no real money. Swap in the live keys only once that works.
+
+### Customer receipts
+Turn on Razorpay → **Settings → Configuration → Email notifications** so the customer
+gets their own payment receipt. The website also shows the order number on screen
+straight after payment.
+
 ## How it fails safe
 If Sanity is ever unreachable, or before the Project ID is set, the site simply
 shows its built-in starter text (prices/names) — it never shows a broken page.
@@ -135,9 +178,10 @@ Product **photos** come from Sanity, so they appear once step A is complete.
 ## Files
 | File | What it is |
 |------|-----------|
-| `sanity.config.js` | Studio configuration (project id, plugins, schema) |
-| `schemaTypes/category.js` | The six shop categories |
-| `schemaTypes/product.js` | A product (name, price, image, specs, reviews…) |
+| `sanity.config.ts` | Studio configuration (project id, plugins, schema) |
+| `schemaTypes/category.ts` | The six shop categories |
+| `schemaTypes/product.ts` | A product (name, price, image, specs, reviews…) |
+| `schemaTypes/order.ts` | A customer order, written by the website's payment functions |
 | `scripts/extract-seed.mjs` | Snapshots old products out of index.html |
 | `scripts/import.mjs` | One-time import of those products into Sanity |
 | `scripts/strip-images.mjs` | (already run) removed base64 images from index.html |

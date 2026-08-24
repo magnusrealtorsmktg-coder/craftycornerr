@@ -7,3 +7,8 @@
   command = "bash netlify-build.sh"
   publish = "dist"
   functions = "netlify/functions"
+
+# esbuild follows the relative import into functions/lib/shop.mjs and inlines it,
+# so the shared checkout logic ships with each function that uses it.
+[functions]
+  node_bundler = "esbuild"

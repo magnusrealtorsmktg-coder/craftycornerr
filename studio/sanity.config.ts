@@ -23,6 +23,34 @@ export default defineConfig({
               .id('siteSettings')
               .child(S.document().schemaType('siteSettings').documentId('siteSettings')),
             S.divider(),
+            // Orders — split so the client's daily job ("what do I pack today?")
+            // is the first thing they see. Pending = customer never completed
+            // payment, so those are noise and live further down.
+            S.listItem()
+              .title('Orders — to pack')
+              .child(
+                S.documentList()
+                  .title('Paid — needs packing')
+                  .filter('_type == "order" && status == "paid"')
+                  .defaultOrdering([{field: 'placedAt', direction: 'desc'}]),
+              ),
+            S.listItem()
+              .title('Orders — shipped')
+              .child(
+                S.documentList()
+                  .title('Shipped & delivered')
+                  .filter('_type == "order" && status in ["shipped", "delivered"]')
+                  .defaultOrdering([{field: 'placedAt', direction: 'desc'}]),
+              ),
+            S.listItem()
+              .title('Orders — all')
+              .child(
+                S.documentList()
+                  .title('All orders')
+                  .filter('_type == "order"')
+                  .defaultOrdering([{field: 'placedAt', direction: 'desc'}]),
+              ),
+            S.divider(),
             S.documentTypeListItem('category').title('Categories'),
             S.documentTypeListItem('product').title('Products'),
             S.divider(),

@@ -53,6 +53,14 @@ export default defineType({
       validation: (r) => r.min(0),
     }),
     defineField({
+      name: 'available',
+      title: 'Available to buy',
+      type: 'boolean',
+      initialValue: true,
+      description:
+        'ON = the Buy / Add to cart button works. OFF = the product still shows on the site, but with "Temporarily unavailable" instead of a buy button. Use this when a handmade piece is sold out or being remade.',
+    }),
+    defineField({
       name: 'badge',
       title: 'Badge',
       type: 'string',
@@ -127,9 +135,13 @@ export default defineType({
     {title: 'Price, high → low', name: 'priceDesc', by: [{field: 'price', direction: 'desc'}]},
   ],
   preview: {
-    select: {title: 'name', price: 'price', media: 'image'},
-    prepare({title, price, media}) {
-      return {title, subtitle: price != null ? '₹' + price : '', media}
+    select: {title: 'name', price: 'price', media: 'image', available: 'available'},
+    prepare({title, price, media, available}) {
+      const rupees = price != null ? '₹' + price : ''
+      // `available` is undefined on documents created before this field existed —
+      // those are treated as available, same as the runtime site does.
+      const sold = available === false ? ' · ⛔ Temporarily unavailable' : ''
+      return {title, subtitle: rupees + sold, media}
     },
   },
 })
