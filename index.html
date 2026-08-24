@@ -1359,16 +1359,20 @@ document.querySelectorAll('[data-art]').forEach((el,i)=>{const k=el.dataset.art;
 /* token: a READ-ONLY ("Viewer") token, from sanity.io/manage -> API -> Tokens.
    It only lets the site READ the catalogue (same data shown on the page), never
    write. Needed because new Sanity datasets keep documents private by default. */
-const SANITY={projectId:'c8746siu',dataset:'production',apiVersion:'2024-01-01',token:'skBqdloBdBlNaoavA58MDcPn94t8wuPsnpKV5TQbciVeFDXQ40aIAsOaPhCJzZ1SQdhKougXwOTDD8vavKYxdP3dw1UGiC19jEwl4WnstKBRqENbklyAVS62cVtFdbmz0DZ3oZ6wTuIoemvAd9r3qbwbOSsejox2nRsXweilweHqKDd2vboW'};
-const sanityOn=()=>SANITY.projectId&&SANITY.projectId!=='YOUR_PROJECT_ID';
+/* The catalogue is fetched through our OWN endpoint, never from Sanity directly,
+   so no Sanity token is shipped to browsers or committed to the repo. The token
+   lives only in Netlify's env and is attached server-side by
+   netlify/functions/catalog.mjs, which also edge-caches the response.
+
+   Local preview note: over file:// or `python3 -m http.server` this endpoint does
+   not exist, the fetch fails, and the page falls back to the built-in starter
+   copy (no product photos). Use `netlify dev` for a faithful local preview. */
+const CATALOG_ENDPOINT='/.netlify/functions/catalog';
+const sanityOn=()=>true;
 async function loadSanity(){
-  if(!sanityOn())return null;
-  const rev='reviews[]{"n":name,"loc":location,"r":rating,"t":text} + *[_type=="review" && approved==true && references(^._id)]|order(submittedAt desc){"n":name,"loc":location,"r":rating,"t":text}';
-  const q=`{"categories":*[_type=="category"]|order(order asc){"key":key,title,tagline,"cover":coverImage.asset->url,"products":*[_type=="product"&&references(^._id)]|order(order asc){"id":code,name,price,"old":oldPrice,badge,available,rating,"rc":reviewCount,"img":image.asset->url,"desc":description,specs,"reviews":${rev}}},"settings":*[_id=="siteSettings"][0]{theme,"heroBg":heroBackground.asset->url,"hero":heroProducts[]->{"img":image.asset->url,name,price,"id":code}}}`;
-  const url=`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}/data/query/${SANITY.dataset}?query=${encodeURIComponent(q)}`;
-  const r=await fetch(url, SANITY.token?{headers:{Authorization:'Bearer '+SANITY.token}}:undefined);
-  if(!r.ok)throw new Error('Sanity HTTP '+r.status);
-  const {result}=await r.json();
+  const r=await fetch(CATALOG_ENDPOINT,{headers:{Accept:'application/json'}});
+  if(!r.ok)throw new Error('catalog HTTP '+r.status);
+  const result=await r.json();
   const cats=result&&result.categories;
   if(!cats||!cats.length)return null;
   const C={},P={},V={};
