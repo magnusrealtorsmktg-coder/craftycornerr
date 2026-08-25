@@ -12,3 +12,8 @@
 # so the shared checkout logic ships with each function that uses it.
 [functions]
   node_bundler = "esbuild"
+
+# Sweep abandoned checkouts (pending orders older than 48h) once a day.
+# See netlify/functions/cleanup-pending.mjs — it never touches paid orders.
+[functions."cleanup-pending"]
+  schedule = "@daily"
