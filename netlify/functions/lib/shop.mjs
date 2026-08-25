@@ -32,6 +32,21 @@ export const json = (statusCode, obj) => ({
   body: JSON.stringify(obj),
 })
 
+// Indian mobile numbers are exactly 10 digits starting 6-9. Customers type them
+// with +91, a leading 0, spaces or dashes, so normalise to bare 10 digits first
+// and store one consistent format — otherwise the same number reaches the packing
+// slip three different ways. Returns '' when it is not a usable mobile number.
+// index.html applies the identical rule for instant feedback; this one is the gate.
+export function normalisePhone(raw) {
+  let d = String(raw == null ? '' : raw).replace(/\D/g, '')
+  if (d.length === 12 && d.startsWith('91')) d = d.slice(2)   // +91XXXXXXXXXX
+  else if (d.length === 11 && d.startsWith('0')) d = d.slice(1) // 0XXXXXXXXXX
+  if (!/^[6-9]\d{9}$/.test(d)) return ''
+  // Reject the obvious placeholders that pass the format check.
+  if (/^(\d)\1{9}$/.test(d)) return ''
+  return d
+}
+
 export const clean = (s, n) =>
   String(s == null ? '' : s)
     .replace(/\s+/g, ' ')

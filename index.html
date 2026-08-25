@@ -1318,12 +1318,10 @@ document.querySelectorAll('[data-foot-cat]').forEach(a=>a.addEventListener('clic
 /* footer newsletter */
 (function(){const f=document.getElementById('footNews');if(f)f.addEventListener('submit',e=>{e.preventDefault();f.reset();toast('Thanks for subscribing ♥');});})();
 
-/* ===== Custom order enquiry -> Web3Forms (emails the studio; no backend needed).
-   PASTE YOUR ACCESS KEY BELOW — get it free at https://web3forms.com (enter the
-   inbox address, they email you a key). It is a public, submit-only key, so it is
-   safe to ship in this file. Until it is set, the form tells the visitor to
-   WhatsApp instead rather than silently swallowing their enquiry. ===== */
-const WEB3FORMS_KEY='9e419d23-7cc6-4351-9c2a-a32b46872250';
+/* Custom-order enquiry -> our own function, which records it in Sanity (so the
+   lead survives an email failure) and notifies the studio. Previously this
+   posted straight to Web3Forms; that left no record and shared one 250/month
+   cap with everything else. See netlify/functions/submit-enquiry.mjs. */
 (function(){
   const f=document.getElementById('customForm');if(!f)return;
   const btn=f.querySelector('button[type=submit]'),note=document.getElementById('cfNote');
@@ -1333,20 +1331,22 @@ const WEB3FORMS_KEY='9e419d23-7cc6-4351-9c2a-a32b46872250';
     e.preventDefault();
     if(f.botcheck&&f.botcheck.checked)return;                 // bot filled the hidden field
     if(!f.reportValidity())return;
-    if(!WEB3FORMS_KEY||WEB3FORMS_KEY.startsWith('PASTE-')){fail('The enquiry form isn’t connected yet');return;}
+    const fd=new FormData(f);
+    const phone=normalisePhone(fd.get('phone'));
+    if(!phone){fail('That mobile number doesn\u2019t look right — 10 digits starting 6, 7, 8 or 9');return;}
     btn.disabled=true;btn.textContent='Sending…';note.className='cf-note';note.textContent='';
     try{
-      const fd=new FormData(f);
-      fd.append('access_key',WEB3FORMS_KEY);
-      fd.append('subject','New custom order enquiry — The Crafty Cornerr');
-      fd.append('from_name','The Crafty Cornerr website');
-      const r=await fetch('https://api.web3forms.com/submit',{method:'POST',body:fd});
+      const r=await fetch('/.netlify/functions/submit-enquiry',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:fd.get('name'),email:fd.get('email'),phone,
+          item:fd.get('item'),message:fd.get('message'),botcheck:fd.get('botcheck')||''})});
       const d=await r.json().catch(()=>({}));
-      if(!r.ok||!d.success)throw new Error(d.message||'send failed');
+      if(!r.ok||!d.ok)throw new Error(d.error||'send failed');
+      // Only reset on success — a failure must leave the typed words in place.
       f.reset();btn.textContent='Sent! we’ll be in touch ♥';
       note.className='cf-note';note.textContent='Thank you — we usually reply within a day.';
       toast('Enquiry sent ♥');
-    }catch(err){console.warn('[TCC] custom enquiry failed',err);fail('Could not send just now');}
+    }catch(err){console.warn('[TCC] custom enquiry failed',err);fail(err.message||'Could not send just now');}
   });
 })();
 document.querySelectorAll('#mobile .brandlogo').forEach(i=>i.src=NAV_LOGO);
@@ -1671,6 +1671,18 @@ function syncDraft(){
   document.querySelectorAll('.co-f input').forEach(inp=>{coDraft[inp.name]=inp.value;});
 }
 
+/* Mirrors normalisePhone() in netlify/functions/lib/shop.mjs — keep the two in
+   step. Indian mobiles are 10 digits starting 6-9; +91 / leading 0 / spaces are
+   normalised away so one number is always stored one way. */
+function normalisePhone(raw){
+  let d=String(raw==null?'':raw).replace(/\D/g,'');
+  if(d.length===12&&d.indexOf('91')===0)d=d.slice(2);
+  else if(d.length===11&&d.charAt(0)==='0')d=d.slice(1);
+  if(!/^[6-9]\d{9}$/.test(d))return '';
+  if(/^(\d)\1{9}$/.test(d))return '';
+  return d;
+}
+
 /* Light client-side check purely for fast feedback — create-order.mjs validates
    all of this again server-side and is the real gate. */
 function validateCheckout(){
@@ -1679,7 +1691,13 @@ function validateCheckout(){
   for(const k in need){
     const v=(coDraft[k]||'').trim();
     let bad=!v;
-    if(!bad&&k==='phone')bad=v.replace(/\D/g,'').length<10;
+    if(!bad&&k==='phone'){
+      if(!normalisePhone(v)){
+        const el=document.getElementById('co_phone');
+        if(el){el.setAttribute('aria-invalid','true');el.focus();}
+        return 'That mobile number doesn\u2019t look right — 10 digits starting 6, 7, 8 or 9.';
+      }
+    }
     if(!bad&&k==='pincode')bad=!/^\d{6}$/.test(v);
     if(!bad&&k==='email')bad=!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
     if(bad){
@@ -1734,7 +1752,7 @@ async function startPayment(btn){
     name:'The Crafty Cornerr',
     description:'Handmade décor · '+order.orderNumber,
     image:location.origin+'/logo.png',   // must be absolute: Razorpay loads it in its own frame
-    prefill:{name:coDraft.name,email:coDraft.email,contact:coDraft.phone},
+    prefill:{name:coDraft.name,email:coDraft.email,contact:normalisePhone(coDraft.phone)||coDraft.phone},
     notes:{address:coDraft.address+', '+coDraft.city+' '+coDraft.pincode},
     theme:{color:'#ff6f61'},
     modal:{ondismiss(){fail('Payment cancelled — your bag is safe, you can try again.');}},
@@ -1826,11 +1844,19 @@ function renderDrawer(){
       <button class="co-back" data-tocart-view>← Back to bag</button>`;
   }else if(drawerMode==='done'){
     drawerTitle.innerHTML='🧡 Thank you';
+    // Deep-link into WhatsApp with the order number already typed, so a customer
+    // chasing their parcel lands in a chat the studio can act on immediately.
+    // Nothing messages them automatically — don't promise that it does.
+    const waMsg=encodeURIComponent(
+      `Hi The Crafty Cornerr! I've just placed order ${coResult.orderNumber||''} and wanted to check in.`);
     drawerBody.innerHTML=`<div class="co-ok">
       <div class="tick">✓</div>
       <h4>Your order is confirmed</h4>
-      <p>We've received your payment and your order is with our studio. You'll get a confirmation on email, and we'll message you on WhatsApp when it ships.</p>
+      <p>We've received your payment and your order is with our studio. A confirmation is on its way to your inbox, and we'll email your tracking details as soon as it ships.</p>
       ${coResult.orderNumber?`<div class="onum">${esc(coResult.orderNumber)}</div>`:''}
+      <p style="margin-top:1.2rem">Questions about your order?</p>
+      <a class="btn coral" style="margin-top:.2rem;display:inline-block;text-decoration:none"
+         href="https://wa.me/917030924448?text=${waMsg}" target="_blank" rel="noopener">Chat on WhatsApp</a>
     </div>`;
     drawerFoot.innerHTML=`<button class="btn coral" data-closedone>Continue shopping</button>`;
   }else{

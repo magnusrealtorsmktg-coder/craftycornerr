@@ -7,6 +7,7 @@
 import {
   json,
   clean,
+  normalisePhone,
   priceCart,
   razorpayKeys,
   createRazorpayOrder,
@@ -18,7 +19,7 @@ function readCustomer(d) {
   const c = (d && d.customer) || {}
   const name = clean(c.name, 60)
   const email = clean(c.email, 80)
-  const phone = clean(c.phone, 20).replace(/[^\d+]/g, '')
+  const phone = normalisePhone(c.phone)
   const address = clean(c.address, 240)
   const city = clean(c.city, 60)
   const state = clean(c.state, 60)
@@ -27,7 +28,7 @@ function readCustomer(d) {
   const problems = []
   if (name.length < 2) problems.push('a name')
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) problems.push('a valid email')
-  if (phone.replace(/\D/g, '').length < 10) problems.push('a 10-digit phone number')
+  if (!phone) problems.push('a valid 10-digit Indian mobile number')
   if (address.length < 8) problems.push('a full street address')
   if (!city) problems.push('a city')
   if (!state) problems.push('a state')

@@ -171,3 +171,37 @@ export function customerEmail(o) {
     ].join('\n'),
   }
 }
+
+// ── 3. custom-order enquiry notification ──────────────────────────────────
+export function enquiryEmail(e) {
+  return {
+    to: STUDIO_INBOX,
+    replyTo: e.email || undefined,
+    subject: `✏️ Custom enquiry — ${e.name} — ${e.item}`,
+    html: shell(
+      `<h2 style="margin:0 0 4px">New custom enquiry</h2>
+       <p style="margin:0 0 18px;color:#8a8076">Someone wants something made.</p>
+       <p style="margin:0 0 4px"><strong>${esc(e.name)}</strong></p>
+       <p style="margin:0 0 18px">📞 <a href="https://wa.me/91${esc(e.phone)}">${esc(e.phone)}</a>
+       &nbsp;·&nbsp; ✉️ <a href="mailto:${esc(e.email)}">${esc(e.email)}</a></p>
+       <p style="margin:0 0 6px;color:#8a8076;font-size:13px">INTERESTED IN</p>
+       <p style="margin:0 0 18px">${esc(e.item)}</p>
+       <p style="margin:0 0 6px;color:#8a8076;font-size:13px">THEIR MESSAGE</p>
+       <p style="margin:0;white-space:pre-wrap">${esc(e.message)}</p>
+       <p style="margin-top:18px"><a href="https://wa.me/91${esc(e.phone)}"
+       style="background:#ff6f61;color:#fff;padding:10px 18px;border-radius:10px;
+       text-decoration:none;display:inline-block">Reply on WhatsApp</a></p>`,
+    ),
+    text: [
+      `NEW CUSTOM ENQUIRY`,
+      '',
+      `  Name    : ${e.name}`,
+      `  Phone   : ${e.phone}`,
+      `  Email   : ${e.email}`,
+      `  Wants   : ${e.item}`,
+      '',
+      'MESSAGE',
+      `  ${String(e.message || '').split('\n').join('\n  ')}`,
+    ].join('\n'),
+  }
+}

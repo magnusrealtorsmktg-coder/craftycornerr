@@ -51,6 +51,32 @@ export default defineConfig({
                   .defaultOrdering([{field: 'placedAt', direction: 'desc'}]),
               ),
             S.divider(),
+            // Enquiries are unpaid leads — separate queue from orders on purpose.
+            S.listItem()
+              .title('Enquiries — new')
+              .child(
+                S.documentList()
+                  .title('New enquiries')
+                  .filter('_type == "enquiry" && status == "new"')
+                  .defaultOrdering([{field: 'submittedAt', direction: 'desc'}]),
+              ),
+            S.listItem()
+              .title('Enquiries — quoted')
+              .child(
+                S.documentList()
+                  .title('Quoted — waiting on customer')
+                  .filter('_type == "enquiry" && status == "quoted"')
+                  .defaultOrdering([{field: 'submittedAt', direction: 'desc'}]),
+              ),
+            S.listItem()
+              .title('Enquiries — all')
+              .child(
+                S.documentList()
+                  .title('All enquiries')
+                  .filter('_type == "enquiry"')
+                  .defaultOrdering([{field: 'submittedAt', direction: 'desc'}]),
+              ),
+            S.divider(),
             S.documentTypeListItem('category').title('Categories'),
             S.documentTypeListItem('product').title('Products'),
             S.divider(),
