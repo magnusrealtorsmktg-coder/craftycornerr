@@ -9,12 +9,22 @@
 // time we send anything, so an email failure must never surface as a payment
 // failure — callers log and carry on.
 
-const API = 'https://api.brevo.com/v3/smtp/email'
+// Provider-agnostic on purpose: whichever key is present gets used, so a signup
+// stuck in review at one service does not block launch. Set exactly one.
+//   RESEND_API_KEY  -> resend.com   (3,000/month free, instant signup)
+//   BREVO_API_KEY   -> brevo.com    (300/day free, sometimes reviews new accounts)
 
 const FROM_EMAIL = process.env.MAIL_FROM || 'orders@thecraftycornerr.com'
 const FROM_NAME = 'The Crafty Cornerr'
-// Where the studio's own copy goes. Falls back to the shop's Gmail.
+// Where the studio's own copy goes. Accepts a comma-separated list so the
+// developer can watch alongside the client during launch.
 export const STUDIO_INBOX = process.env.STUDIO_EMAIL || 'thecraftycornerr26@gmail.com'
+
+const recipients = (to) =>
+  String(to || '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean)
 
 export const rupees = (n) => '₹' + Number(n || 0).toLocaleString('en-IN')
 
@@ -24,35 +34,69 @@ export const esc = (s) =>
     (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c],
   )
 
+async function viaResend({list, toName, subject, html, text, replyTo}) {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: list,
+      subject,
+      html,
+      text,
+      ...(replyTo ? {reply_to: replyTo} : {}),
+    }),
+  })
+  return res
+}
+
+async function viaBrevo({list, toName, subject, html, text, replyTo}) {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+      accept: 'application/json',
+    },
+    body: JSON.stringify({
+      sender: {email: FROM_EMAIL, name: FROM_NAME},
+      to: list.map((email, i) => ({email, name: i === 0 ? toName || undefined : undefined})),
+      subject,
+      htmlContent: html,
+      textContent: text,
+      ...(replyTo ? {replyTo: {email: replyTo}} : {}),
+    }),
+  })
+  return res
+}
+
 export async function sendMail({to, toName, subject, html, text, replyTo}) {
-  const key = process.env.BREVO_API_KEY
-  if (!key) {
-    console.warn('BREVO_API_KEY not set — skipping email:', subject)
+  const list = recipients(to)
+  if (!list.length) return {sent: false, reason: 'no-recipient'}
+
+  const send = process.env.RESEND_API_KEY
+    ? viaResend
+    : process.env.BREVO_API_KEY
+      ? viaBrevo
+      : null
+  if (!send) {
+    console.warn('No RESEND_API_KEY or BREVO_API_KEY set — skipping email:', subject)
     return {sent: false, reason: 'no-key'}
   }
-  if (!to) return {sent: false, reason: 'no-recipient'}
 
+  const provider = send === viaResend ? 'resend' : 'brevo'
   try {
-    const res = await fetch(API, {
-      method: 'POST',
-      headers: {'api-key': key, 'content-type': 'application/json', accept: 'application/json'},
-      body: JSON.stringify({
-        sender: {email: FROM_EMAIL, name: FROM_NAME},
-        to: [{email: to, name: toName || undefined}],
-        subject,
-        htmlContent: html,
-        textContent: text,
-        ...(replyTo ? {replyTo: {email: replyTo}} : {}),
-      }),
-    })
+    const res = await send({list, toName, subject, html, text, replyTo})
     if (!res.ok) {
-      const body = await res.text()
-      console.error('brevo', res.status, body.slice(0, 300))
-      return {sent: false, reason: 'brevo-' + res.status}
+      console.error(provider, res.status, (await res.text()).slice(0, 300))
+      return {sent: false, reason: `${provider}-${res.status}`}
     }
-    return {sent: true}
+    return {sent: true, provider}
   } catch (e) {
-    console.error('brevo threw:', e.message)
+    console.error(provider, 'threw:', e.message)
     return {sent: false, reason: 'threw'}
   }
 }
