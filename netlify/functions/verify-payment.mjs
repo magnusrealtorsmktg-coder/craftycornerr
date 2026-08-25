@@ -12,72 +12,27 @@ import {
   sanityMutate,
   verifySignature,
   razorpayKeys,
-  SANITY_PROJECT,
 } from './lib/shop.mjs'
-
-const WEB3FORMS_KEY = process.env.WEB3FORMS_KEY || '9e419d23-7cc6-4351-9c2a-a32b46872250'
-
-const rupees = (n) => '₹' + Number(n || 0).toLocaleString('en-IN')
+import {sendMail, studioEmail, customerEmail} from './lib/email.mjs'
 
 // Fallback path only: if the pending draft never made it into Sanity we rebuild
 // what we can from Razorpay's own copy of the order, which carries the amount
 // and the notes we attached at creation.
-async function fetchRazorpayOrder(orderId) {
+async function razorpayGet(path) {
   const {id, secret} = razorpayKeys()
   const auth = Buffer.from(`${id}:${secret}`).toString('base64')
-  const res = await fetch(`https://api.razorpay.com/v1/orders/${orderId}`, {
+  const res = await fetch(`https://api.razorpay.com/v1${path}`, {
     headers: {Authorization: `Basic ${auth}`},
   })
   if (!res.ok) return null
   return res.json()
 }
+const fetchRazorpayOrder = (orderId) => razorpayGet(`/orders/${orderId}`)
 
-async function emailStudio(order) {
-  if (!WEB3FORMS_KEY || WEB3FORMS_KEY.startsWith('PASTE-')) return
-  const lines = (order.items || [])
-    .map((i) => `  ${i.qty} × ${i.name} (${i.code}) — ${rupees(i.price * i.qty)}`)
-    .join('\n')
-
-  const message = [
-    `NEW PAID ORDER — ${order.orderNumber}`,
-    '',
-    'SHIP TO',
-    `  ${order.customerName}`,
-    `  ${(order.address || '').split('\n').join('\n  ')}`,
-    `  Phone: ${order.customerPhone}`,
-    `  Email: ${order.customerEmail}`,
-    '',
-    'ITEMS',
-    lines,
-    '',
-    `  Subtotal   ${rupees(order.subtotal)}`,
-    `  Shipping   ${order.shipping ? rupees(order.shipping) : 'Free'}`,
-    `  TOTAL PAID ${rupees(order.total)}`,
-    '',
-    `Razorpay payment id: ${order.razorpayPaymentId}`,
-    `Razorpay order id:   ${order.razorpayOrderId}`,
-    '',
-    `Mark it as shipped here: https://the-crafty-cornerr.sanity.studio/structure/order`,
-  ].join('\n')
-
-  try {
-    await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', Accept: 'application/json'},
-      body: JSON.stringify({
-        access_key: WEB3FORMS_KEY,
-        subject: `🧡 Paid order ${order.orderNumber} — ${rupees(order.total)} — ${order.customerName}`,
-        from_name: 'The Crafty Cornerr shop',
-        replyto: order.customerEmail,
-        message,
-      }),
-    })
-  } catch (e) {
-    // Never fail the customer's checkout because an email did not send — the
-    // order is already safe in Sanity and in the Razorpay dashboard.
-    console.error('studio email failed:', e.message)
-  }
-}
+// The contact Razorpay actually processed the payment with. For UPI and
+// netbanking it is tied to the payment instrument, so it is a useful
+// cross-check against whatever was typed into our own form.
+const fetchRazorpayPayment = (paymentId) => razorpayGet(`/payments/${paymentId}`)
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') return json(405, {error: 'Method not allowed'})
@@ -160,11 +115,34 @@ export async function handler(event) {
     console.error('could not record paid order:', e.message)
   }
 
-  await emailStudio({
+  // Pull the contact Razorpay processed the payment with — best effort, and
+  // only used to enrich the notification, never to gate anything.
+  let verifiedPhone = ''
+  try {
+    const pay = await fetchRazorpayPayment(paymentId)
+    verifiedPhone = (pay && pay.contact) || ''
+    if (verifiedPhone && order && order._id) {
+      await sanityMutate([{patch: {id: order._id, set: {verifiedPhone}}}])
+    }
+  } catch (e) {
+    console.error('could not read payment contact:', e.message)
+  }
+
+  const full = {
     ...order,
+    verifiedPhone,
     razorpayOrderId: orderId,
     razorpayPaymentId: paymentId,
-  })
+  }
+
+  // Both emails are best-effort and independent: the customer still gets their
+  // confirmation if the studio's copy fails, and vice versa.
+  const [studio, customer] = await Promise.all([
+    sendMail(studioEmail(full)),
+    full.customerEmail ? sendMail(customerEmail(full)) : Promise.resolve({sent: false, reason: 'no-email'}),
+  ])
+  if (!studio.sent) console.error('studio email not sent:', studio.reason)
+  if (!customer.sent) console.error('customer email not sent:', customer.reason)
 
   return json(200, {ok: true, orderNumber: (order && order.orderNumber) || ''})
 }

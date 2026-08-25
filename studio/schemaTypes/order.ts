@@ -73,6 +73,14 @@ export default defineType({
     defineField({name: 'customerName', title: 'Customer name', type: 'string', readOnly: true}),
     defineField({name: 'customerEmail', title: 'Email', type: 'string', readOnly: true}),
     defineField({name: 'customerPhone', title: 'Phone', type: 'string', readOnly: true}),
+    defineField({
+      name: 'verifiedPhone',
+      title: 'Phone (from Razorpay)',
+      type: 'string',
+      readOnly: true,
+      description:
+        'The contact Razorpay processed the payment with. If this differs from the phone above, try both — this one is tied to the payment instrument.',
+    }),
 
     defineField({
       name: 'address',
