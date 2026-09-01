@@ -249,3 +249,80 @@ export function enquiryEmail(e) {
     ].join('\n'),
   }
 }
+
+// ── 4. "your order has shipped" ───────────────────────────────────────────
+// Deep links where the courier supports a predictable one; otherwise the
+// tracking page plus the number, which is still better than no link at all.
+const COURIERS = {
+  delhivery: {name: 'Delhivery', url: (n) => `https://www.delhivery.com/track/package/${encodeURIComponent(n)}`},
+  shiprocket: {name: 'Shiprocket', url: (n) => `https://shiprocket.co/tracking/${encodeURIComponent(n)}`},
+  bluedart: {
+    name: 'Blue Dart',
+    url: (n) =>
+      `https://www.bluedart.com/web/guest/trackdartresult?trackFor=0&trackNo=${encodeURIComponent(n)}`,
+  },
+  dtdc: {name: 'DTDC', url: () => 'https://www.dtdc.in/track'},
+  indiapost: {name: 'India Post', url: () => 'https://www.indiapost.gov.in/_layouts/15/DOP.Portal.Tracking/TrackConsignment.aspx'},
+  other: {name: '', url: () => ''},
+}
+
+export function shippedEmail(o) {
+  const c = COURIERS[o.courier] || COURIERS.other
+  const num = String(o.trackingNumber || '').trim()
+  const link = num && c.url ? c.url(num) : ''
+  const who = c.name ? `with <b>${esc(c.name)}</b>` : 'on its way'
+
+  const trackBlock = num
+    ? `<div style="background:#fff6f2;border:1.5px solid rgba(255,138,128,.45);border-radius:16px;
+         padding:1rem 1.2rem;margin:1.2rem 0">
+         <p style="margin:0 0 .3rem;color:#8a8076;font-size:13px">TRACKING NUMBER</p>
+         <p style="margin:0;font-size:1.15rem;font-weight:700;letter-spacing:.02em">${esc(num)}</p>
+         ${
+           link
+             ? `<p style="margin:.9rem 0 0"><a href="${link}"
+                 style="background:#ff6f61;color:#fff;padding:10px 18px;border-radius:10px;
+                 text-decoration:none;display:inline-block;font-weight:600">Track your parcel</a></p>`
+             : ''
+         }
+       </div>`
+    : ''
+
+  return {
+    to: o.customerEmail,
+    toName: o.customerName,
+    replyTo: STUDIO_INBOX,
+    subject: `📦 Your order ${o.orderNumber} is on its way!`,
+    html: shell(
+      `<h2 style="margin:0 0 4px">It's on its way! 📦</h2>
+       <p style="margin:0 0 6px;color:#8a8076">Order ${esc(o.orderNumber)}</p>
+       <p style="margin:0 0 4px">Your handmade pieces have left our studio ${who}.</p>
+       ${trackBlock}
+       <table style="width:100%;font-size:14px">${itemRows(o.items)}</table>
+       <h3 style="margin:22px 0 6px;font-size:15px">Delivering to</h3>
+       <p style="margin:0">${esc(o.customerName)}<br>${esc(o.address || '').split('\n').join('<br>')}</p>
+       <h3 style="margin:22px 0 6px;font-size:15px">When it arrives</h3>
+       <p style="margin:0;color:#555">Delivery usually takes up to 15 days depending on the
+       courier and where you are. Please film a clear, continuous video as you open the parcel —
+       it is required for any exchange claim, and claims must be raised within 72 hours of
+       delivery. Anything at all, just reply to this email or message us on WhatsApp.</p>`,
+    ),
+    text: [
+      `It's on its way! Order ${o.orderNumber}`,
+      '',
+      c.name ? `Courier: ${c.name}` : null,
+      num ? `Tracking number: ${num}` : null,
+      link ? `Track it: ${link}` : null,
+      '',
+      ...(o.items || []).map((i) => `  ${i.qty} x ${i.name}`),
+      '',
+      'DELIVERING TO',
+      `  ${o.customerName}`,
+      `  ${(o.address || '').split('\n').join('\n  ')}`,
+      '',
+      'Delivery usually takes up to 15 days. Please film a continuous unboxing',
+      'video — it is required for any exchange claim, within 72 hours of delivery.',
+    ]
+      .filter((l) => l !== null)
+      .join('\n'),
+  }
+}

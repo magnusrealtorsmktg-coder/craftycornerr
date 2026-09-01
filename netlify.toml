@@ -17,3 +17,9 @@
 # See netlify/functions/cleanup-pending.mjs — it never touches paid orders.
 [functions."cleanup-pending"]
   schedule = "@daily"
+
+# Backstop for shipping emails, in case the Sanity webhook is missing or fails.
+# See netlify/functions/sweep-notifications.mjs — the shippedNotifiedAt stamp
+# stops this and the webhook from ever double-sending.
+[functions."sweep-notifications"]
+  schedule = "@hourly"

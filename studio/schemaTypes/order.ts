@@ -35,11 +35,44 @@ export default defineType({
         layout: 'radio',
       },
     }),
+    // Filling these two in and setting status to "Shipped" is what emails the
+    // customer their tracking details — see netlify/functions/notify-shipped.mjs.
+    defineField({
+      name: 'courier',
+      title: 'Courier',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Delhivery', value: 'delhivery'},
+          {title: 'DTDC', value: 'dtdc'},
+          {title: 'Blue Dart', value: 'bluedart'},
+          {title: 'India Post', value: 'indiapost'},
+          {title: 'Shiprocket', value: 'shiprocket'},
+          {title: 'Other', value: 'other'},
+        ],
+      },
+      description: 'Who is carrying the parcel. Used to build the tracking link in the email.',
+    }),
+    defineField({
+      name: 'trackingNumber',
+      title: 'Tracking number',
+      type: 'string',
+      description:
+        'The AWB / consignment number. Fill this in BEFORE setting the status to Shipped — the customer’s email includes it.',
+    }),
     defineField({
       name: 'trackingNote',
-      title: 'Courier / tracking note',
+      title: 'Private note',
       type: 'string',
-      description: 'Free text for your own reference — courier name and tracking number.',
+      description: 'Anything for your own reference. The customer never sees this.',
+    }),
+    defineField({
+      name: 'shippedNotifiedAt',
+      title: 'Shipping email sent',
+      type: 'datetime',
+      readOnly: true,
+      description:
+        'Stamped automatically when the customer is emailed their tracking details. Its presence is what stops a second email being sent if this order is edited again.',
     }),
 
     defineField({
