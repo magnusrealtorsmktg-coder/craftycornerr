@@ -874,6 +874,52 @@ html.loading,html.loading body{overflow:hidden!important}
 @media (prefers-reduced-motion:reduce){
   .loader-stage,#loader{transition:opacity .4s linear}
 }
+
+/* ============ CHECKOUT (Razorpay) + AVAILABILITY ============
+   The checkout is a third mode of the existing side drawer (cart / fav /
+   checkout), so it inherits the drawer's scroll-lock, close button and
+   transitions for free. Fields are light-themed here — the .cf styles further
+   up belong to the dark #custom section and must not be reused. */
+.co-form{padding-bottom:.4rem}
+.co-intro{font-size:.84rem;color:#8a8076;line-height:1.5;margin-bottom:1.1rem}
+.co-f{margin-bottom:.85rem}
+.co-row{display:flex;gap:.7rem}
+.co-row .co-f{flex:1;min-width:0}
+.co-f label{display:block;font-size:.72rem;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:#8a8076;margin-bottom:.32rem}
+.co-f input{width:100%;background:#fff;border:1px solid rgba(34,34,34,.14);border-radius:12px;
+  color:var(--charcoal);font-family:var(--sans);font-size:.94rem;padding:.72rem .85rem;
+  outline:none;transition:border-color .25s,box-shadow .25s}
+.co-f input::placeholder{color:#b5aca4}
+.co-f input:focus{border-color:var(--coral);box-shadow:0 0 0 3px rgba(255,111,97,.13)}
+.co-f input[aria-invalid="true"]{border-color:#d64b3c;background:#fff7f6}
+.co-note{margin:.2rem 0 0;font-size:.83rem;line-height:1.5;color:#8a8076;min-height:1.2em}
+.co-note.err{color:#c0392b;font-weight:600}
+.co-trust{display:flex;align-items:center;gap:.4rem;justify-content:center;
+  margin-top:.6rem;font-size:.74rem;color:#8a8076}
+.co-back{background:none;border:0;cursor:pointer;color:#8a8076;font-size:.82rem;
+  text-decoration:underline;padding:.5rem 0 0;display:block;margin:0 auto}
+.co-back:hover{color:var(--coral)}
+/* success state */
+.co-ok{text-align:center;padding:2.6rem 1rem}
+.co-ok .tick{width:62px;height:62px;border-radius:50%;background:var(--sage);color:#fff;
+  display:grid;place-items:center;font-size:1.9rem;margin:0 auto 1rem}
+.co-ok h4{font-family:var(--display);font-size:1.35rem;font-weight:800;margin-bottom:.5rem}
+.co-ok p{font-size:.9rem;color:#8a8076;line-height:1.6;margin-bottom:.5rem}
+.co-ok .onum{display:inline-block;margin-top:.3rem;padding:.4rem .8rem;border-radius:10px;
+  background:#fff;border:1px dashed rgba(34,34,34,.2);font-weight:700;letter-spacing:.04em}
+/* a cart line whose product went out of stock while it sat in the bag */
+.litem.gone{opacity:.55}
+.li-gone{font-size:.76rem;font-weight:700;color:#c0392b;margin-top:.35rem}
+/* out-of-stock product card + PDP */
+.pcard.oos .pi img{filter:grayscale(.75);opacity:.62}
+.oos-tag{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;
+  background:rgba(34,34,34,.82);color:#fff;font-size:.72rem;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;padding:.42rem .8rem;border-radius:99px;white-space:nowrap;backdrop-filter:blur(3px)}
+.pdp-oos{width:100%;padding:.9rem 1rem;border-radius:16px;background:rgba(34,34,34,.06);
+  border:1px dashed rgba(34,34,34,.2);text-align:center;font-weight:700;color:#6b6259;font-size:.92rem}
+.pdp-oos small{display:block;font-weight:500;font-size:.8rem;color:#8a8076;margin-top:.25rem}
+@media(max-width:820px){.co-row{flex-direction:column;gap:0}}
 </style>
 </head>
 <body>
@@ -1200,8 +1246,10 @@ html.loading,html.loading body{overflow:hidden!important}
       <h4>Help</h4>
       <ul>
         <li><a href="support.html">Support center</a></li>
-        <li><a href="support.html#faq">Shipping &amp; delivery</a></li>
-        <li><a href="support.html#exchange">Exchange policy</a></li>
+        <li><a href="policies.html#shipping">Shipping &amp; delivery</a></li>
+        <li><a href="policies.html#refund">Refund &amp; cancellation</a></li>
+        <li><a href="policies.html#terms">Terms &amp; conditions</a></li>
+        <li><a href="policies.html#privacy">Privacy policy</a></li>
         <li><a href="support.html#faq">FAQs</a></li>
         <li><a href="support.html#contact">Contact us</a></li>
       </ul>
@@ -1272,12 +1320,10 @@ document.querySelectorAll('[data-foot-cat]').forEach(a=>a.addEventListener('clic
 /* footer newsletter */
 (function(){const f=document.getElementById('footNews');if(f)f.addEventListener('submit',e=>{e.preventDefault();f.reset();toast('Thanks for subscribing ♥');});})();
 
-/* ===== Custom order enquiry -> Web3Forms (emails the studio; no backend needed).
-   PASTE YOUR ACCESS KEY BELOW — get it free at https://web3forms.com (enter the
-   inbox address, they email you a key). It is a public, submit-only key, so it is
-   safe to ship in this file. Until it is set, the form tells the visitor to
-   WhatsApp instead rather than silently swallowing their enquiry. ===== */
-const WEB3FORMS_KEY='9e419d23-7cc6-4351-9c2a-a32b46872250';
+/* Custom-order enquiry -> our own function, which records it in Sanity (so the
+   lead survives an email failure) and notifies the studio. Previously this
+   posted straight to Web3Forms; that left no record and shared one 250/month
+   cap with everything else. See netlify/functions/submit-enquiry.mjs. */
 (function(){
   const f=document.getElementById('customForm');if(!f)return;
   const btn=f.querySelector('button[type=submit]'),note=document.getElementById('cfNote');
@@ -1287,20 +1333,22 @@ const WEB3FORMS_KEY='9e419d23-7cc6-4351-9c2a-a32b46872250';
     e.preventDefault();
     if(f.botcheck&&f.botcheck.checked)return;                 // bot filled the hidden field
     if(!f.reportValidity())return;
-    if(!WEB3FORMS_KEY||WEB3FORMS_KEY.startsWith('PASTE-')){fail('The enquiry form isn’t connected yet');return;}
+    const fd=new FormData(f);
+    const phone=normalisePhone(fd.get('phone'));
+    if(!phone){fail('That mobile number doesn\u2019t look right — 10 digits starting 6, 7, 8 or 9');return;}
     btn.disabled=true;btn.textContent='Sending…';note.className='cf-note';note.textContent='';
     try{
-      const fd=new FormData(f);
-      fd.append('access_key',WEB3FORMS_KEY);
-      fd.append('subject','New custom order enquiry — The Crafty Cornerr');
-      fd.append('from_name','The Crafty Cornerr website');
-      const r=await fetch('https://api.web3forms.com/submit',{method:'POST',body:fd});
+      const r=await fetch('/.netlify/functions/submit-enquiry',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:fd.get('name'),email:fd.get('email'),phone,
+          item:fd.get('item'),message:fd.get('message'),botcheck:fd.get('botcheck')||''})});
       const d=await r.json().catch(()=>({}));
-      if(!r.ok||!d.success)throw new Error(d.message||'send failed');
+      if(!r.ok||!d.ok)throw new Error(d.error||'send failed');
+      // Only reset on success — a failure must leave the typed words in place.
       f.reset();btn.textContent='Sent! we’ll be in touch ♥';
       note.className='cf-note';note.textContent='Thank you — we usually reply within a day.';
       toast('Enquiry sent ♥');
-    }catch(err){console.warn('[TCC] custom enquiry failed',err);fail('Could not send just now');}
+    }catch(err){console.warn('[TCC] custom enquiry failed',err);fail(err.message||'Could not send just now');}
   });
 })();
 document.querySelectorAll('#mobile .brandlogo').forEach(i=>i.src=NAV_LOGO);
@@ -1313,23 +1361,27 @@ document.querySelectorAll('[data-art]').forEach((el,i)=>{const k=el.dataset.art;
 /* token: a READ-ONLY ("Viewer") token, from sanity.io/manage -> API -> Tokens.
    It only lets the site READ the catalogue (same data shown on the page), never
    write. Needed because new Sanity datasets keep documents private by default. */
-const SANITY={projectId:'c8746siu',dataset:'production',apiVersion:'2024-01-01',token:'skBqdloBdBlNaoavA58MDcPn94t8wuPsnpKV5TQbciVeFDXQ40aIAsOaPhCJzZ1SQdhKougXwOTDD8vavKYxdP3dw1UGiC19jEwl4WnstKBRqENbklyAVS62cVtFdbmz0DZ3oZ6wTuIoemvAd9r3qbwbOSsejox2nRsXweilweHqKDd2vboW'};
-const sanityOn=()=>SANITY.projectId&&SANITY.projectId!=='YOUR_PROJECT_ID';
+/* The catalogue is fetched through our OWN endpoint, never from Sanity directly,
+   so no Sanity token is shipped to browsers or committed to the repo. The token
+   lives only in Netlify's env and is attached server-side by
+   netlify/functions/catalog.mjs, which also edge-caches the response.
+
+   Local preview note: over file:// or `python3 -m http.server` this endpoint does
+   not exist, the fetch fails, and the page falls back to the built-in starter
+   copy (no product photos). Use `netlify dev` for a faithful local preview. */
+const CATALOG_ENDPOINT='/.netlify/functions/catalog';
+const sanityOn=()=>true;
 async function loadSanity(){
-  if(!sanityOn())return null;
-  const rev='reviews[]{"n":name,"loc":location,"r":rating,"t":text} + *[_type=="review" && approved==true && references(^._id)]|order(submittedAt desc){"n":name,"loc":location,"r":rating,"t":text}';
-  const q=`{"categories":*[_type=="category"]|order(order asc){"key":key,title,tagline,"cover":coverImage.asset->url,"products":*[_type=="product"&&references(^._id)]|order(order asc){"id":code,name,price,"old":oldPrice,badge,rating,"rc":reviewCount,"img":image.asset->url,"desc":description,specs,"reviews":${rev}}},"settings":*[_id=="siteSettings"][0]{theme,"heroBg":heroBackground.asset->url,"hero":heroProducts[]->{"img":image.asset->url,name,price,"id":code}}}`;
-  const url=`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}/data/query/${SANITY.dataset}?query=${encodeURIComponent(q)}`;
-  const r=await fetch(url, SANITY.token?{headers:{Authorization:'Bearer '+SANITY.token}}:undefined);
-  if(!r.ok)throw new Error('Sanity HTTP '+r.status);
-  const {result}=await r.json();
+  const r=await fetch(CATALOG_ENDPOINT,{headers:{Accept:'application/json'}});
+  if(!r.ok)throw new Error('catalog HTTP '+r.status);
+  const result=await r.json();
   const cats=result&&result.categories;
   if(!cats||!cats.length)return null;
   const C={},P={},V={};
   cats.forEach(cat=>{ if(!cat.key)return;
     const products=(cat.products||[]).map(p=>{ const img=p.img||'';   // clean base URL; each render site sizes it via imgW()
       if(p.id&&img)P[p.id]=img;
-      return {id:p.id,name:p.name,price:p.price,old:p.old||null,badge:p.badge||null,rating:p.rating||0,rc:p.rc||0,img,desc:p.desc||'',specs:(p.specs||[]).map(s=>[s.label,s.value]),reviews:p.reviews||[]};
+      return {id:p.id,name:p.name,price:p.price,old:p.old||null,badge:p.badge||null,available:p.available!==false,rating:p.rating||0,rc:p.rc||0,img,desc:p.desc||'',specs:(p.specs||[]).map(s=>[s.label,s.value]),reviews:p.reviews||[]};
     });
     C[cat.key]={title:cat.title,ek:cat.tagline||'',products};
     V[cat.key]=imgW(cat.cover||(products[0]&&products[0].img)||'',800);
@@ -1403,6 +1455,15 @@ const palette=['var(--peach)','var(--lav)','var(--sage)','#ffe0d2','#f3eaff'];
    client's full-res phone upload never streams at full size. No-op on empty URLs. */
 function imgW(url,w){return url?url+(url.indexOf('?')<0?'?':'&')+'w='+w+'&auto=format':'';}
 function priceFmt(n){return '₹'+n.toLocaleString('en-IN');}
+/* Availability: products predating the Sanity `available` field have it undefined,
+   so ONLY an explicit false hides the buy button. netlify/functions/lib/shop.mjs
+   applies the identical rule server-side — keep the two in step. */
+function buyable(p){return !!p&&p.available!==false;}
+/* Shipping shown to the customer. The CHARGED figure is computed server-side in
+   netlify/functions/lib/shop.mjs — change it there too, or the cart total and the
+   Razorpay total will disagree. support.html quotes these numbers in prose. */
+const SHIP_FLAT=79, SHIP_FREE_OVER=999;
+function shipFor(sub){return sub<=0?0:(sub>=SHIP_FREE_OVER?0:SHIP_FLAT);}
 function starHTML(r){let s='';for(let i=1;i<=5;i++){s+=i<=Math.round(r)?'★':'<span class="e">★</span>';}return s;}
 /* Average rating + count derived from a product's actual reviews (seed + approved).
    Falls back to the CMS rating/reviewCount only when a product has no reviews yet. */
@@ -1571,6 +1632,10 @@ const drawer=document.getElementById('drawer'),drawerBack=document.getElementByI
   drawerBody=document.getElementById('drawerBody'),drawerFoot=document.getElementById('drawerFoot'),
   drawerTitle=document.getElementById('drawerTitle');
 let drawerMode=null;
+/* Checkout state. coDraft survives re-renders of the address form so a
+   half-typed address is never lost; coResult carries the order number into
+   the receipt view. */
+let coDraft={}, coResult={};
 function openDrawer(mode){drawerMode=mode;renderDrawer();drawer.classList.add('open');drawerBack.classList.add('open');drawer.setAttribute('aria-hidden','false');lockScroll(true);}
 function closeDrawer(){drawer.classList.remove('open');drawerBack.classList.remove('open');drawer.setAttribute('aria-hidden','true');drawerMode=null;if(!shopOv.classList.contains('open'))lockScroll(false);}
 drawerBack.addEventListener('click',closeDrawer);
@@ -1578,6 +1643,153 @@ document.getElementById('drawerClose').addEventListener('click',closeDrawer);
 document.getElementById('cartBtn').addEventListener('click',()=>openDrawer('cart'));
 document.getElementById('favBtn').addEventListener('click',()=>openDrawer('fav'));
 addEventListener('keydown',e=>{if(e.key==='Escape'&&drawer.classList.contains('open'))closeDrawer();});
+
+/* ============ RAZORPAY CHECKOUT ============
+   Two server round-trips, because neither can be trusted to the browser:
+     1. create-order  — re-prices the bag from Sanity and opens a Razorpay order.
+                        Returns the *public* key id, so it is never hardcoded here.
+     2. verify-payment — checks Razorpay's HMAC signature before the sale counts.
+   The browser only ever says which product codes and how many. */
+
+/* checkout.js is ~40 KB and irrelevant to the 95% who never check out,
+   so it is fetched on the first Pay click rather than at page load. */
+let _rzpLoad=null;
+function loadRazorpay(){
+  if(window.Razorpay)return Promise.resolve();
+  if(_rzpLoad)return _rzpLoad;
+  _rzpLoad=new Promise((resolve,reject)=>{
+    const sc=document.createElement('script');
+    sc.src='https://checkout.razorpay.com/v1/checkout.js';
+    sc.onload=resolve;
+    sc.onerror=()=>{_rzpLoad=null;reject(new Error('Could not reach Razorpay.'));};
+    document.head.appendChild(sc);
+  });
+  return _rzpLoad;
+}
+
+/* Autofill does not reliably fire an `input` event, so never trust coDraft alone
+   at submit time — read the live field values back first. */
+function syncDraft(){
+  document.querySelectorAll('.co-f input').forEach(inp=>{coDraft[inp.name]=inp.value;});
+}
+
+/* Mirrors normalisePhone() in netlify/functions/lib/shop.mjs — keep the two in
+   step. Indian mobiles are 10 digits starting 6-9; +91 / leading 0 / spaces are
+   normalised away so one number is always stored one way. */
+function normalisePhone(raw){
+  let d=String(raw==null?'':raw).replace(/\D/g,'');
+  if(d.length===12&&d.indexOf('91')===0)d=d.slice(2);
+  else if(d.length===11&&d.charAt(0)==='0')d=d.slice(1);
+  if(!/^[6-9]\d{9}$/.test(d))return '';
+  if(/^(\d)\1{9}$/.test(d))return '';
+  return d;
+}
+
+/* Light client-side check purely for fast feedback — create-order.mjs validates
+   all of this again server-side and is the real gate. */
+function validateCheckout(){
+  const need={name:'your name',phone:'a phone number',email:'an email',
+    address:'a street address',city:'a city',state:'a state',pincode:'a PIN code'};
+  for(const k in need){
+    const v=(coDraft[k]||'').trim();
+    let bad=!v;
+    if(!bad&&k==='phone'){
+      if(!normalisePhone(v)){
+        const el=document.getElementById('co_phone');
+        if(el){el.setAttribute('aria-invalid','true');el.focus();}
+        return 'That mobile number doesn\u2019t look right — 10 digits starting 6, 7, 8 or 9.';
+      }
+    }
+    if(!bad&&k==='pincode')bad=!/^\d{6}$/.test(v);
+    if(!bad&&k==='email')bad=!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+    if(bad){
+      const el=document.getElementById('co_'+k);
+      if(el){el.setAttribute('aria-invalid','true');el.focus();}
+      return 'Please enter '+need[k]+'.';
+    }
+  }
+  return null;
+}
+
+async function startPayment(btn){
+  const note=document.getElementById('coNote');
+  const label=btn.textContent;
+  const fail=m=>{if(note){note.className='co-note err';note.textContent=m;}
+    btn.disabled=false;btn.textContent=label;};
+  const clear=()=>{if(note){note.className='co-note';note.textContent='';}};
+
+  clear();
+  syncDraft();
+  const problem=validateCheckout();
+  if(problem)return fail(problem);
+
+  const items=Store.cartItems();
+  if(!items.length)return fail('Your bag is empty.');
+  if(items.some(it=>!buyable(findProd(it.key,it.id))))
+    return fail('Something in your bag just sold out — please go back and remove it.');
+
+  btn.disabled=true;btn.textContent='Starting secure checkout…';
+
+  let order;
+  try{
+    await loadRazorpay();
+    const res=await fetch('/.netlify/functions/create-order',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({items:items.map(it=>({id:it.id,qty:it.qty})),customer:coDraft})
+    });
+    order=await res.json().catch(()=>({}));
+    if(!res.ok||!order.ok)throw new Error(order.error||'We could not start the payment.');
+  }catch(e){
+    // Deliberately leaves the typed address in place so nothing has to be retyped.
+    return fail(e.message||'We could not start the payment. Please try again.');
+  }
+
+  btn.textContent='Opening payment…';
+
+  const rzp=new window.Razorpay({
+    key:order.keyId,
+    order_id:order.razorpayOrderId,
+    amount:order.amount,
+    currency:order.currency||'INR',
+    name:'The Crafty Cornerr',
+    description:'Handmade décor · '+order.orderNumber,
+    image:location.origin+'/logo.png',   // must be absolute: Razorpay loads it in its own frame
+    prefill:{name:coDraft.name,email:coDraft.email,contact:normalisePhone(coDraft.phone)||coDraft.phone},
+    notes:{address:coDraft.address+', '+coDraft.city+' '+coDraft.pincode},
+    theme:{color:'#ff6f61'},
+    modal:{ondismiss(){fail('Payment cancelled — your bag is safe, you can try again.');}},
+    async handler(resp){
+      btn.textContent='Confirming payment…';
+      try{
+        const vr=await fetch('/.netlify/functions/verify-payment',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            razorpay_order_id:resp.razorpay_order_id,
+            razorpay_payment_id:resp.razorpay_payment_id,
+            razorpay_signature:resp.razorpay_signature
+          })
+        });
+        const v=await vr.json().catch(()=>({}));
+        if(!vr.ok||!v.ok)throw new Error(v.error||'verify failed');
+        coResult={orderNumber:v.orderNumber||order.orderNumber};
+      }catch(e){
+        /* The money HAS left the customer's account at this point — the payment
+           id is our proof. Never show a failure here; show the payment id and
+           let them quote it to us. The Razorpay dashboard has the sale either way. */
+        coResult={orderNumber:order.orderNumber};
+        toast('Payment received — confirming with our studio.');
+      }
+      Store.cartItems().forEach(it=>Store.remove(it.key,it.id));
+      coDraft={};
+      openDrawer('done');
+    }
+  });
+  rzp.on('payment.failed',resp=>{
+    const d=(resp&&resp.error&&resp.error.description)||'The payment did not go through.';
+    fail(d+' Your bag is safe — you can try another method.');
+  });
+  rzp.open();
+}
 
 function liThumb(p){return `<div class="thumb" data-go><img src="${imgW(p.img,160)}" alt="${p.name}" loading="lazy"></div>`;}
 function renderDrawer(){
@@ -1589,19 +1801,66 @@ function renderDrawer(){
       drawerBody.innerHTML=`<div class="drawer-empty"><span class="emo">🛍</span>Your cart is empty.<br>Add something handmade ♥<button class="btn coral" data-shop>Browse collections</button></div>`;
       drawerFoot.innerHTML='';
     }else{
-      drawerBody.innerHTML=items.map(it=>{const p=findProd(it.key,it.id),c=CATALOG[it.key];
-        return `<div class="litem" data-key="${it.key}" data-id="${it.id}">${liThumb(p)}
+      drawerBody.innerHTML=items.map(it=>{const p=findProd(it.key,it.id),c=CATALOG[it.key];const ok=buyable(p);
+        return `<div class="litem${ok?'':' gone'}" data-key="${it.key}" data-id="${it.id}">${liThumb(p)}
           <div class="li-main"><div class="li-name" data-go>${p.name}</div><div class="li-cat">${c.title}</div>
           <div class="li-price">${priceFmt(p.price)}</div>
+          ${ok?'':'<div class="li-gone">Temporarily unavailable — please remove to check out</div>'}
           <div class="li-row"><div class="qty"><button data-dec aria-label="Decrease">−</button><span>${it.qty}</span><button data-inc aria-label="Increase">+</button></div>
           <button class="li-rm" data-rm>Remove</button></div></div></div>`;}).join('');
-      const sub=Store.subtotal(),ship=(sub>=999||sub===0)?0:79;
+      // An item can sell out while it sits in someone's bag, so re-check on every
+      // render rather than trusting what was buyable when it was added.
+      const blocked=items.some(it=>!buyable(findProd(it.key,it.id)));
+      const sub=Store.subtotal(),ship=shipFor(sub);
       drawerFoot.innerHTML=`<div class="cart-sum"><span class="lbl">Subtotal</span><span>${priceFmt(sub)}</span></div>
         <div class="cart-sum"><span class="lbl">Shipping</span><span>${ship?priceFmt(ship):'Free'}</span></div>
         <div class="cart-sum total"><span>Total</span><span>${priceFmt(sub+ship)}</span></div>
-        ${sub<999?`<div class="cart-ship">Add ${priceFmt(999-sub)} more for free shipping.</div>`:''}
-        <button class="btn coral" data-checkout>Checkout · ${priceFmt(sub+ship)}</button>`;
+        ${sub<SHIP_FREE_OVER?`<div class="cart-ship">Add ${priceFmt(SHIP_FREE_OVER-sub)} more for free shipping.</div>`:''}
+        <button class="btn coral" data-checkout ${blocked?'disabled':''}>${blocked?'Remove unavailable items':`Checkout · ${priceFmt(sub+ship)}`}</button>`;
     }
+  }else if(drawerMode==='checkout'){
+    drawerTitle.innerHTML='📦 Delivery details';
+    const sub=Store.subtotal(),ship=shipFor(sub);
+    const f=(id,label,ph,attrs='')=>`<div class="co-f"><label for="co_${id}">${label}</label>
+      <input id="co_${id}" name="${id}" placeholder="${ph}" value="${esc(coDraft[id]||'')}" ${attrs}></div>`;
+    drawerBody.innerHTML=`<div class="co-form">
+      <p class="co-intro">Your pieces are handmade and shipped by courier across India — we need a full address to get them to you safely.</p>
+      ${f('name','Full name','Aarohi Sharma','autocomplete="name"')}
+      <div class="co-row">
+        ${f('phone','Phone','9876543210','type="tel" inputmode="numeric" autocomplete="tel"')}
+        ${f('pincode','PIN code','400001','inputmode="numeric" maxlength="6" autocomplete="postal-code"')}
+      </div>
+      ${f('email','Email','you@email.com','type="email" autocomplete="email"')}
+      ${f('address','Address','Flat / house no, street, landmark','autocomplete="street-address"')}
+      <div class="co-row">
+        ${f('city','City','Mumbai','autocomplete="address-level2"')}
+        ${f('state','State','Maharashtra','autocomplete="address-level1"')}
+      </div>
+      <p class="co-note" id="coNote"></p>
+    </div>`;
+    drawerFoot.innerHTML=`<div class="cart-sum"><span class="lbl">Subtotal</span><span>${priceFmt(sub)}</span></div>
+      <div class="cart-sum"><span class="lbl">Shipping</span><span>${ship?priceFmt(ship):'Free'}</span></div>
+      <div class="cart-sum total"><span>Total</span><span>${priceFmt(sub+ship)}</span></div>
+      <button class="btn coral" data-pay>Pay ${priceFmt(sub+ship)}</button>
+      <div class="co-trust">🔒 Secured by Razorpay · UPI, cards, netbanking</div>
+      <button class="co-back" data-tocart-view>← Back to bag</button>`;
+  }else if(drawerMode==='done'){
+    drawerTitle.innerHTML='🧡 Thank you';
+    // Deep-link into WhatsApp with the order number already typed, so a customer
+    // chasing their parcel lands in a chat the studio can act on immediately.
+    // Nothing messages them automatically — don't promise that it does.
+    const waMsg=encodeURIComponent(
+      `Hi The Crafty Cornerr! I've just placed order ${coResult.orderNumber||''} and wanted to check in.`);
+    drawerBody.innerHTML=`<div class="co-ok">
+      <div class="tick">✓</div>
+      <h4>Your order is confirmed</h4>
+      <p>We've received your payment and your order is with our studio. A confirmation is on its way to your inbox, and we'll email your tracking details as soon as it ships.</p>
+      ${coResult.orderNumber?`<div class="onum">${esc(coResult.orderNumber)}</div>`:''}
+      <p style="margin-top:1.2rem">Questions about your order?</p>
+      <a class="btn coral" style="margin-top:.2rem;display:inline-block;text-decoration:none"
+         href="https://wa.me/917030924448?text=${waMsg}" target="_blank" rel="noopener">Chat on WhatsApp</a>
+    </div>`;
+    drawerFoot.innerHTML=`<button class="btn coral" data-closedone>Continue shopping</button>`;
   }else{
     drawerTitle.innerHTML='♥ Favourites';
     const items=Store.favItems();
@@ -1632,8 +1891,17 @@ function wireDrawer(){
     const tc=li.querySelector('[data-tocart]');if(tc)tc.addEventListener('click',()=>{Store.add(key,id,1);toast('Added to cart ♥');});
   });
   const shop=drawerBody.querySelector('[data-shop]');if(shop)shop.addEventListener('click',()=>{closeDrawer();location.hash='#collections';});
-  const co=drawerFoot.querySelector('[data-checkout]');if(co)co.addEventListener('click',()=>toast('Secure checkout is coming soon ✦'));
+  const co=drawerFoot.querySelector('[data-checkout]');
+  if(co&&!co.disabled)co.addEventListener('click',()=>openDrawer('checkout'));
   const ac=drawerFoot.querySelector('[data-allcart]');if(ac)ac.addEventListener('click',()=>{Store.favItems().forEach(it=>Store.add(it.key,it.id,1));toast('Favourites added to cart ♥');openDrawer('cart');});
+  const back=drawerFoot.querySelector('[data-tocart-view]');if(back)back.addEventListener('click',()=>openDrawer('cart'));
+  const done=drawerFoot.querySelector('[data-closedone]');if(done)done.addEventListener('click',closeDrawer);
+  // keep every keystroke in coDraft so a re-render can restore the form
+  drawerBody.querySelectorAll('.co-f input').forEach(inp=>{
+    inp.addEventListener('input',()=>{coDraft[inp.name]=inp.value;inp.removeAttribute('aria-invalid');});
+  });
+  const pay=drawerFoot.querySelector('[data-pay]');
+  if(pay)pay.addEventListener('click',()=>startPayment(pay));
 }
 
 /* nav badges + heart sync */
@@ -1649,7 +1917,10 @@ function syncHearts(){
   document.querySelectorAll('[data-heart]').forEach(h=>{const{key,id}=(function(s){const i=s.indexOf(':');return{key:s.slice(0,i),id:s.slice(i+1)};})(h.dataset.heart);
     const on=Store.isFav(key,id);h.classList.toggle('on',on);h.textContent=on?'♥':'♡';});
 }
-Store.onChange(()=>{renderBadges();syncHearts();if(drawerMode)renderDrawer();});
+Store.onChange(()=>{renderBadges();syncHearts();
+  // Never re-render over the checkout form or the receipt — that would wipe a
+  // half-typed address, or worse, replace a paid confirmation.
+  if(drawerMode==='cart'||drawerMode==='fav')renderDrawer();});
 renderBadges();
 
 function openCategory(key){
@@ -1658,8 +1929,8 @@ function openCategory(key){
   shopOv.style.setProperty('--cat',CATBG[key]||'var(--peach)');
   catView.innerHTML=`<div class="cat-head"><div class="ek">${c.ek}</div><h2>${c.title}</h2></div>
     <div class="cat-grid">${c.products.map((p,i)=>`
-      <div class="pcard" data-cat="${key}" data-id="${p.id}">
-        <div class="pi">${p.badge?`<span class="pbadge">${p.badge}</span>`:''}<button class="pcard-heart" data-heart="${key}:${p.id}" aria-label="Add to favourites">♡</button><img src="${imgW(p.img,600)}" alt="${p.name}" loading="lazy"></div>
+      <div class="pcard${buyable(p)?'':' oos'}" data-cat="${key}" data-id="${p.id}">
+        <div class="pi">${p.badge&&buyable(p)?`<span class="pbadge">${p.badge}</span>`:''}${buyable(p)?'':'<span class="oos-tag">Temporarily unavailable</span>'}<button class="pcard-heart" data-heart="${key}:${p.id}" aria-label="Add to favourites">♡</button><img src="${imgW(p.img,600)}" alt="${p.name}" loading="lazy"></div>
         <div class="pb"><h3>${p.name}</h3>
           <div class="prow"><div class="price">${p.old?`<s>${priceFmt(p.old)}</s>`:''}${priceFmt(p.price)}</div><div class="stars">${starHTML(reviewStats(p).avg)}</div></div>
           <div class="rc">${reviewStats(p).avg.toFixed(1)} · ${reviewStats(p).count} reviews</div>
@@ -1701,7 +1972,8 @@ function openProduct(key,id){
         <ul class="pdp-specs">${p.specs.map(s=>`<li><span>${s[0]}</span><span>${s[1]}</span></li>`).join('')}</ul>
         ${policyHTML}
         <div class="pdp-actions">
-          <button class="btn coral" data-add>Add to cart</button>
+          ${buyable(p)?`<button class="btn coral" data-add>Add to cart</button>`
+            :`<div class="pdp-oos">Temporarily unavailable<small>This piece is handmade to order — ask us on WhatsApp when it's back.</small></div>`}
           <button class="btn ghost" data-custom>Request custom</button>
           <button class="wish" data-wish data-heart="${key}:${p.id}">♡</button>
         </div>
@@ -1724,7 +1996,8 @@ function openProduct(key,id){
     </div>`;
   const main=pdpView.querySelector('#pdpMain');
   pdpView.querySelectorAll('.thumbs button').forEach(b=>b.addEventListener('click',()=>{main.style.background=b.dataset.bg;pdpView.querySelectorAll('.thumbs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');}));
-  pdpView.querySelector('[data-add]').addEventListener('click',()=>{Store.add(key,id,1);toast('Added to cart ♥');openDrawer('cart');});
+  const addBtn=pdpView.querySelector('[data-add]');
+  if(addBtn)addBtn.addEventListener('click',()=>{Store.add(key,id,1);toast('Added to cart ♥');openDrawer('cart');});
   pdpView.querySelector('[data-custom]').addEventListener('click',()=>{closeShop();setTimeout(()=>{location.hash='#custom';},320);});
   const wish=pdpView.querySelector('[data-wish]');
   wish.addEventListener('click',()=>{const on=Store.toggleFav(key,id);toast(on?'Saved to favourites ♥':'Removed from favourites');});

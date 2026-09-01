@@ -7,3 +7,19 @@
   command = "bash netlify-build.sh"
   publish = "dist"
   functions = "netlify/functions"
+
+# esbuild follows the relative import into functions/lib/shop.mjs and inlines it,
+# so the shared checkout logic ships with each function that uses it.
+[functions]
+  node_bundler = "esbuild"
+
+# Sweep abandoned checkouts (pending orders older than 48h) once a day.
+# See netlify/functions/cleanup-pending.mjs — it never touches paid orders.
+[functions."cleanup-pending"]
+  schedule = "@daily"
+
+# Backstop for shipping emails, in case the Sanity webhook is missing or fails.
+# See netlify/functions/sweep-notifications.mjs — the shippedNotifiedAt stamp
+# stops this and the webhook from ever double-sending.
+[functions."sweep-notifications"]
+  schedule = "@hourly"
